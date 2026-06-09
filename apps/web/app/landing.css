@@ -404,6 +404,11 @@ body.landing-open .landing .nav-mobile {
 .landing .bar { background: var(--bg-2); }
 .landing .bar .cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 6vw, 90px); }
 .landing .bar .cols--solo { grid-template-columns: minmax(0, 760px); justify-content: center; }
+.landing .bar-note {
+  text-align: center; margin-top: 30px;
+  font-family: var(--body); font-size: 13px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+}
 .landing .bar .col h3 { font-size: 30px; display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
 .landing .bar .col h3 .ln { flex: 1; height: 1px; background: var(--line); }
 .landing .bar .col .sub {

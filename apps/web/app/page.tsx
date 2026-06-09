@@ -166,22 +166,47 @@ export default function Page() {
         <div className="wrap">
           <div className="head">
             <div className="l">
-              <span className="eyebrow" data-reveal>Авторский бар</span>
+              <span className="eyebrow" data-reveal>Бар</span>
               <h2 className="title" data-reveal data-delay="1">Что в <em>бокале</em></h2>
-              <p className="lead" data-reveal data-delay="2">Коктейли, которые дружат с дымом — авторская карта от шефа.</p>
+              <p className="lead" data-reveal data-delay="2">Авторские коктейли, чай-стимер и лимонады — карта от шефа.</p>
             </div>
           </div>
-          <div className="cols cols--solo">
-            <div className="col" data-reveal>
+          <div className="cols">
+            <div className="col">
               <h3>Коктейли <span className="ln" /></h3>
               <div className="sub">Авторская карта</div>
-              <BarItem name="Old Object" desc="Бурбон, выдержанный вермут, дымная горечь" price="690" />
-              <BarItem name="Бархатный Негрони" desc="Джин, кампари, апельсиновое масло" price="650" />
-              <BarItem name="Дымный сауэр" desc="Мескаль, лайм, тимьян, белок" price="720" />
-              <BarItem name="Грейпфрут & розмарин" desc="Джин, тоник, свежий грейпфрут" price="590" />
-              <BarItem name="Безалкогольный сад" desc="Бузина, мята, яблоко, содовая" price="420" />
+              <BarItem name="Опен Объект ★" desc="Окхард, мартини фиеро, персик, супер-джус. Фирменный." price="690" />
+              <BarItem name="Негрони" desc="Джин, биттер, мартини россо, апельсин" price="650" />
+              <BarItem name="Эспрессо-мартини" desc="Эспрессо, водка, кофейный ликёр" price="650" />
+              <BarItem name="Виски-сауэр" desc="Виски, сахарный сироп, супер-джус, лимон" price="690" />
+              <BarItem name="Лонг-Айленд" desc="Ром, джин, водка, текила, трипл-сек, кола, лайм" price="690" />
+              <BarItem name="Апероль шприц" desc="Апероль, игристое, содовая, апельсин" price="590" />
+              <BarItem name="Фиеро-тоник" desc="Мартини фиеро, тоник, содовая, грейпфрут" price="590" />
+              <BarItem name="Ягодный слинг" desc="Джин, биттер, ананас, вишня, лимон" price="650" />
+              <BarItem name="Мэджик Вуду" desc="Текила, ликёр дыня, апельсин, яблоко, блю, кокос" price="690" />
+              <BarItem name="Дарк Флава" desc="Блю, гренадин, бузина, трипл-сек, лимончелло, игристое" price="690" />
+              <BarItem name="Барби" desc="Лимончелло, клубника, супер-джус, содовая, лимон" price="590" />
+              <BarItem name="Яблочный дайкири" desc="Ром, яблоко, супер-джус" price="590" />
+              <BarItem name="Мохито" desc="Ром, лайм, мята, сахар, содовая" price="590" />
+            </div>
+            <div className="col">
+              <h3>Чай-стимер · Лимонады <span className="ln" /></h3>
+              <div className="sub">Авторский чай 490 ₽ за чайник · Лимонад от 390 ₽</div>
+              <BarItem name="Лесные ягоды" desc="Малина, гренадин, мята, чай ассам" price="490" />
+              <BarItem name="Малина-маракуйя (чай)" desc="Малина, маракуйя, апельсин, фруктовый чай" price="490" />
+              <BarItem name="Облепиха-имбирь" desc="Облепиха, мёд, имбирь, специи" price="490" />
+              <BarItem name="Хвойный чай" desc="Хвоя, мёд, розмарин, лайм, мята" price="490" />
+              <BarItem name="Облепиха-цитрус" desc="Облепиха, мандарин, лимон, апельсин, грейпфрут" price="390" />
+              <BarItem name="Яблоко-кокос" desc="Кокос, яблоко, кокосовое молоко, стружка" price="390" />
+              <BarItem name="Ягодный взрыв" desc="Малина, смородина, бузина, мята, лимон" price="390" />
+              <BarItem name="Конструктор лимонада" desc="Пюре → сироп → подсластитель → газация и гарниш" price="390" />
+              <BarItem name="Мохито б/а" desc="Лайм, мята, сахар, содовая" price="390" />
+              <BarItem name="Пина колада б/а" desc="Сливки, кокос, ананас" price="450" />
             </div>
           </div>
+          <p className="bar-note">
+            Полная карта — кофе, фреши, сет-шоты — открывается в QR-меню за вашим столом.
+          </p>
         </div>
       </section>
 

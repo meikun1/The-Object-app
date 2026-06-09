@@ -4,6 +4,7 @@
 import LandingClient from '@/components/landing/LandingClient';
 import Smoke from '@/components/landing/Smoke';
 import BookingForm from '@/components/landing/BookingForm';
+import ClosingTimer from '@/components/landing/ClosingTimer';
 
 export default function Page() {
   return (
@@ -69,9 +70,9 @@ export default function Page() {
         </div>
         <div className="hero-meta">
           <div className="stats">
-            <div className="stat"><div className="n">40+</div><div className="t">Сортов табака</div></div>
-            <div className="stat"><div className="n">7</div><div className="t">Лет ритуала</div></div>
-            <div className="stat"><div className="n">03:00</div><div className="t">Закрываем</div></div>
+            <div className="stat"><div className="n">250+</div><div className="t">Сортов табака</div></div>
+            <div className="stat"><div className="n">1,5</div><div className="t">Года ритуала</div></div>
+            <ClosingTimer />
           </div>
           <div className="scroll-hint"><span className="ln" /> Листайте вниз</div>
         </div>

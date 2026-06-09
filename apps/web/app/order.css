@@ -258,7 +258,21 @@ body.order-locked { overflow: hidden; }
 .order .oh-row { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-top: 1px solid var(--line-soft); }
 .order .oh-row:first-child { border-top: none; }
 .order .oh-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.order .oh-id { font-family: var(--body); font-size: 12px; color: var(--muted); }
+.order .oh-id { font-family: var(--body); font-size: 12px; color: var(--muted); display: inline-flex; align-items: baseline; gap: 8px; }
+.order .oh-kind {
+  font-family: var(--body); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid rgba(203,163,90,.35); padding: 2px 8px; border-radius: 30px;
+}
+.order .oh-grand {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 10px; padding: 14px 14px; border-top: 1px solid var(--line);
+  background: var(--bg-3); border-radius: 6px;
+}
+.order .oh-grand span {
+  font-family: var(--body); font-size: 11px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.order .oh-grand b { font-family: var(--display); font-size: 24px; color: var(--accent-2); font-weight: 400; }
 .order .oh-chip {
   font-family: var(--body); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
   padding: 3px 9px; border-radius: 30px; border: 1px solid var(--line); color: var(--muted);

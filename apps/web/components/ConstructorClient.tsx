@@ -314,23 +314,36 @@ function OrdersHistory({ orders }: { orders: OrderRow[] }) {
   const txt: Record<OrderRow['status'], string> = {
     PENDING: 'ждём бармена', ACCEPTED: 'готовится', READY: 'готов', REJECTED: 'отклонён',
   };
+  // Полная сумма стола считается без отклонённых.
+  const tableTotal = orders
+    .filter((o) => o.status !== 'REJECTED')
+    .reduce((s, o) => s + Number(o.total), 0);
   return (
     <section className="ohistory">
       <h3>Уже отправлено</h3>
-      {orders.map((o) => (
+      {orders.map((o, i) => (
         <div className="oh-row" key={o.id}>
           <div className="oh-head">
-            <span className="oh-id">#{o.id.slice(-6).toUpperCase()}</span>
+            <span className="oh-id">
+              #{o.id.slice(-6).toUpperCase()}
+              <span className="oh-kind">{i === 0 ? 'основной заказ' : `дозаказ #${i}`}</span>
+            </span>
             <span className={`oh-chip ${cls[o.status]}`}>{txt[o.status]}</span>
             <span className="oh-total">{fmt(o.total)} ₽</span>
           </div>
           <div className="oh-items">
-            {o.items.map((it, i) => (
-              <div key={i}><b>{it.qty}×</b> {it.summary} <span className="oh-by">— {it.guestName}</span></div>
+            {o.items.map((it, idx) => (
+              <div key={idx}><b>{it.qty}×</b> {it.summary} <span className="oh-by">— {it.guestName}</span></div>
             ))}
           </div>
         </div>
       ))}
+      {orders.length > 1 && (
+        <div className="oh-grand">
+          <span>Итого по столу</span>
+          <b>{fmt(tableTotal.toFixed(2))} ₽</b>
+        </div>
+      )}
     </section>
   );
 }

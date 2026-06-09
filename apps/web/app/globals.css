@@ -610,3 +610,72 @@ a.cr__v:hover { color: var(--blood); }
 
 .ed__act { display: flex; gap: 8px; margin-top: 8px; }
 .ed__act .adm__btn { flex: 1; }
+.ed__row { display: flex; gap: 14px; }
+.ed__row .ed__fld { flex: 1; }
+
+/* ============================================================
+   РЕДАКТОР МЕНЮ
+   ============================================================ */
+.me { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.me__base { border: 1px solid var(--line); background: rgba(255,255,255,.015); }
+.me__base--off { opacity: .55; }
+.me__base-head { display: flex; align-items: center; gap: 6px; padding: 10px 12px; }
+.me__base-toggle {
+  width: 26px; height: 26px; background: transparent; border: none; color: var(--dim);
+  font-size: 1rem; cursor: pointer; flex-shrink: 0;
+}
+.me__base-toggle:hover { color: var(--ink); }
+.me__base-title {
+  flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 12px;
+  background: none; border: none; cursor: pointer; padding: 0; text-align: left;
+  color: var(--ink); font-family: var(--d); font-size: 1.05rem;
+}
+.me__base-title:hover { color: var(--blood); }
+.me__base-title i { font-family: var(--m); font-style: normal; font-size: .82rem; color: var(--dim); flex-shrink: 0; }
+
+.me__desc { padding: 0 12px 8px 44px; font-size: .86rem; color: var(--dim); margin: 0; }
+
+.me__avail, .me__avail-mini { display: flex; align-items: center; cursor: pointer; flex-shrink: 0; }
+.me__avail input, .me__avail-mini input { width: 18px; height: 18px; accent-color: var(--blood); cursor: pointer; }
+.me__avail-mini input { width: 15px; height: 15px; }
+
+.me__del, .me__del-mini {
+  width: 28px; height: 28px; padding: 0; min-width: 0;
+  font-size: .85rem; flex-shrink: 0;
+}
+.me__del-mini {
+  width: 22px; height: 22px; border: 1px solid var(--line); background: transparent;
+  color: var(--faint); cursor: pointer; border-radius: 2px; font-family: var(--m); font-size: .7rem;
+}
+.me__del-mini:hover { color: var(--blood); border-color: var(--blood); }
+
+.me__groups { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.me__group { border: 1px dashed var(--line); padding: 10px 12px; background: rgba(0,0,0,.18); }
+.me__group-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.me__group-title {
+  flex: 1; display: flex; align-items: baseline; gap: 10px;
+  background: none; border: none; cursor: pointer; padding: 0; text-align: left;
+  color: var(--ink); font-family: var(--m); font-size: .76rem; letter-spacing: .12em; text-transform: uppercase;
+}
+.me__group-title:hover { color: var(--blood); }
+.me__group-title i { font-family: var(--m); font-style: normal; font-size: .66rem; color: var(--faint); letter-spacing: .1em; }
+
+.me__mods { display: flex; flex-direction: column; gap: 4px; }
+.me__mod { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 2px; }
+.me__mod--off { opacity: .55; }
+.me__mod:hover { background: rgba(255,255,255,.03); }
+.me__mod-name {
+  flex: 1; display: flex; align-items: baseline; gap: 10px;
+  background: none; border: none; cursor: pointer; padding: 0; text-align: left;
+  color: var(--ink); font-size: .9rem;
+}
+.me__mod-name:hover { color: var(--blood); }
+.me__mod-name i { font-family: var(--m); font-style: normal; font-size: .76rem; color: var(--dim); }
+
+.me__add {
+  align-self: flex-start; background: transparent; border: 1px dashed var(--line);
+  color: var(--dim); padding: 8px 16px; cursor: pointer;
+  font-family: var(--m); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+  border-radius: 2px; transition: color .25s, border-color .25s;
+}
+.me__add:hover { color: var(--blood); border-color: var(--blood); }

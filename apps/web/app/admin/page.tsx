@@ -1,8 +1,8 @@
 'use client';
-// Админка. Этап 3: подписанные QR-коды на каждом столе + сброс стола
-// (закрытие сессии и ротация секрета — старые QR умирают).
+// Админка. Этапы 3-6: подписанные QR, Telegram-бот, редактор меню.
 // Вход — единоразовый ввод ADMIN_ACCESS_TOKEN (сохраняется в localStorage).
 import { useEffect, useState } from 'react';
+import MenuEditor from '@/components/MenuEditor';
 
 type TableRow = { id: string; label: string; kind: string; active?: boolean; sortOrder?: number };
 
@@ -191,13 +191,11 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         )}
       </section>
 
+      <MenuEditor token={token} />
+
       <TelegramSection token={token} />
 
       <StaffSection items={staff} />
-
-      <section className="adm__card adm__card--muted">
-        Здесь появятся редактор меню, аудит. Этап 6.
-      </section>
 
       {qrFor && <QrModal table={qrFor} token={token} onClose={() => setQrFor(null)} />}
       {editFor && (

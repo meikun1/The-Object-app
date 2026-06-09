@@ -380,7 +380,7 @@ function Tile({ label, value }: { label: string; value: string }) {
       border: '1px solid var(--line)', background: 'var(--void-2)',
       padding: '12px 14px',
     }}>
-      <div style={{ fontFamily: 'var(--m)', fontSize: '.62rem', letter: '.16em', textTransform: 'uppercase', color: 'var(--faint)' }}>{label}</div>
+      <div style={{ fontFamily: 'var(--m)', fontSize: '.62rem', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--faint)' }}>{label}</div>
       <div style={{ fontFamily: 'var(--d)', fontSize: '1.5rem', marginTop: 4, color: 'var(--ink)' }}>{value}</div>
     </div>
   );

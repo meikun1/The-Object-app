@@ -1,0 +1,17 @@
+{
+  "name": "the-object",
+  "private": true,
+  "version": "0.1.0",
+  "description": "THE OBJECT — лаундж-бар: сайт-визитка + гостевой бар-конструктор за столом, Telegram-бот, r_keeper.",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "api:migrate": "pnpm --filter @app/api prisma:migrate",
+    "api:seed": "pnpm --filter @app/api seed",
+    "setup": "pnpm install && pnpm db:up && pnpm api:migrate && pnpm api:seed"
+  },
+  "packageManager": "pnpm@9.7.0",
+  "engines": { "node": ">=20" }
+}

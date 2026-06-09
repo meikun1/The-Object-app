@@ -75,6 +75,7 @@ export default async function GuestPage({ params }: Props) {
   return (
     <ConstructorClient
       tableId={table.id}
+      token={params.token}
       tableLabel={table.label}
       bases={serialized}
     />

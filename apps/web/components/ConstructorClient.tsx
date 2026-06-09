@@ -1,203 +1,398 @@
 'use client';
 
-// Гостевой конструктор: список основ → модал выбора модификаторов →
-// корзина → отправка заказа. Цена считается локально для предпросмотра;
-// итоговая цена и валидация — на сервере в /api/orders.
-import { useMemo, useState } from 'react';
+// Гостевой конструктор. Общая корзина стола: каждый гость вводит имя
+// один раз, добавляет позиции в общую корзину, видит, что добавили другие,
+// общий счёт. «Отправить заказ» отправляет всё одним заказом, корзина
+// очищается — можно дозаказать.
+//
+// localStorage: `object_guest_<tableId>` = { name, guestId }
+// Серверное состояние тянем поллингом каждые ~2 с.
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type Modifier = { id: string; name: string; priceDelta: string };
 type Group = {
-  id: string;
-  name: string;
-  required: boolean;
-  minSelect: number;
-  maxSelect: number;
+  id: string; name: string;
+  required: boolean; minSelect: number; maxSelect: number;
   modifiers: Modifier[];
 };
 type Base = {
-  id: string;
-  name: string;
-  description: string | null;
-  price: string;
+  id: string; name: string;
+  description: string | null; price: string;
   groups: Group[];
 };
 
-type CartItem = {
-  cid: string; // локальный id строки в корзине
-  base: Base;
-  selections: Record<string, string[]>; // groupId → [modifierId]
+type CartLine = {
+  id: string;
+  guestId: string;
+  guestName: string;
+  summary: string;
   qty: number;
+  unitPrice: string;
+  lineTotal: string;
+};
+
+type OrderRow = {
+  id: string;
+  status: 'PENDING' | 'ACCEPTED' | 'READY' | 'REJECTED';
+  total: string;
+  createdAt: string;
+  items: { guestName: string; summary: string; qty: number; lineTotal: string }[];
+};
+
+type State = {
+  tableLabel: string;
+  sessionId: string;
+  cart: CartLine[];
+  cartTotal: string;
+  orders: OrderRow[];
 };
 
 type Props = {
-  tableId: string;
+  tableId: string;        // плоский id (для localStorage)
+  token: string;          // подписанный <tableId>.<sig> для запросов
   tableLabel: string;
   bases: Base[];
 };
 
-const fmt = (n: number) => n.toLocaleString('ru-RU');
+const fmt = (n: number | string) => Number(n).toLocaleString('ru-RU');
+const cartKey = (id: string) => `object_guest_${id}`;
 
-function computeUnit(base: Base, selections: Record<string, string[]>): number {
-  let total = Number(base.price);
-  for (const g of base.groups) {
-    for (const id of selections[g.id] ?? []) {
-      const m = g.modifiers.find((mm) => mm.id === id);
-      if (m) total += Number(m.priceDelta);
-    }
-  }
-  return total;
-}
-
-function describe(base: Base, selections: Record<string, string[]>): string {
-  const mods: string[] = [];
-  for (const g of base.groups) {
-    for (const id of selections[g.id] ?? []) {
-      const m = g.modifiers.find((mm) => mm.id === id);
-      if (m) mods.push(m.name);
-    }
-  }
-  return mods.length ? `${base.name}, ${mods.join(', ')}` : base.name;
-}
-
-export default function ConstructorClient({ tableId, tableLabel, bases }: Props) {
-  const [name, setName] = useState('');
+export default function ConstructorClient({ tableId, token, tableLabel, bases }: Props) {
+  const [me, setMe] = useState<{ name: string; guestId: string | null } | null>(null);
+  const [showName, setShowName] = useState(false);
+  const [state, setState] = useState<State | null>(null);
   const [picking, setPicking] = useState<Base | null>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [sending, setSending] = useState(false);
-  const [done, setDone] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const pollRef = useRef<number | null>(null);
 
-  const total = useMemo(
-    () => cart.reduce((s, it) => s + computeUnit(it.base, it.selections) * it.qty, 0),
-    [cart],
-  );
-
-  const addToCart = (item: CartItem) => {
-    setCart((c) => [...c, item]);
-    setPicking(null);
-  };
-  const remove = (cid: string) => setCart((c) => c.filter((i) => i.cid !== cid));
-  const changeQty = (cid: string, delta: number) =>
-    setCart((c) => c.map((i) => (i.cid === cid ? { ...i, qty: Math.max(1, i.qty + delta) } : i)));
-
-  const submit = async () => {
-    if (!name.trim()) { setErr('Введите имя'); return; }
-    if (cart.length === 0) { setErr('Корзина пуста'); return; }
-    setErr(null); setSending(true);
+  // === Загрузка имени из localStorage ===
+  useEffect(() => {
     try {
-      const res = await fetch('/api/orders', {
+      const raw = localStorage.getItem(cartKey(tableId));
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p?.name) {
+          setMe({ name: p.name, guestId: p.guestId ?? null });
+          return;
+        }
+      }
+    } catch {}
+    setShowName(true);
+  }, [tableId]);
+
+  // === Поллинг состояния ===
+  const refresh = async () => {
+    try {
+      const r = await fetch(`/api/t/${token}/state`, { cache: 'no-store' });
+      if (r.ok) {
+        const j = (await r.json()) as State;
+        setState(j);
+      }
+    } catch {}
+  };
+  useEffect(() => {
+    refresh();
+    pollRef.current = window.setInterval(refresh, 2500) as unknown as number;
+    return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // === Действия ===
+  const setName = (name: string) => {
+    const trimmed = name.trim().slice(0, 40);
+    if (!trimmed) return;
+    setMe((prev) => ({ name: trimmed, guestId: prev?.guestId ?? null }));
+    localStorage.setItem(
+      cartKey(tableId),
+      JSON.stringify({ name: trimmed, guestId: me?.guestId ?? null }),
+    );
+    setShowName(false);
+  };
+
+  const addToCart = async (base: Base, selections: Record<string, string[]>, qty: number) => {
+    if (!me) { setShowName(true); return; }
+    setErr(null);
+    const modifierIds = Object.values(selections).flat();
+    try {
+      const r = await fetch(`/api/t/${token}/cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tableId,
-          guestName: name.trim(),
-          items: cart.map((c) => ({
-            baseId: c.base.id,
-            qty: c.qty,
-            modifierIds: Object.values(c.selections).flat(),
-          })),
+          guestId: me.guestId,
+          guestName: me.name,
+          baseId: base.id,
+          modifierIds,
+          qty,
         }),
       });
-      if (!res.ok) throw new Error(String(res.status));
-      const j = await res.json();
-      setDone(`Заказ ${j.orderId.slice(-6).toUpperCase()} отправлен. Бармен подтвердит.`);
-      setCart([]);
-    } catch (e) {
-      setErr('Не удалось отправить. Позовите бармена.');
-    } finally {
-      setSending(false);
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error ?? `Ошибка ${r.status}`);
+      }
+      const j = await r.json();
+      const newMe = { name: me.name, guestId: j.guestId };
+      setMe(newMe);
+      localStorage.setItem(cartKey(tableId), JSON.stringify(newMe));
+      setPicking(null);
+      await refresh();
+    } catch (e: any) {
+      setErr(String(e?.message ?? e));
     }
   };
 
-  if (done) {
-    return (
-      <main className="wrap">
-        <p className="eyebrow">THE OBJECT · {tableLabel}</p>
-        <h1>Принято</h1>
-        <div className="card"><p>{done}</p></div>
-        <div className="card">
-          <button className="btn btn--line" onClick={() => setDone(null)}>Сделать ещё заказ</button>
-        </div>
-      </main>
-    );
+  const removeItem = async (cartId: string) => {
+    setErr(null);
+    try {
+      await fetch(`/api/t/${token}/cart/${cartId}`, { method: 'DELETE' });
+      await refresh();
+    } catch (e: any) {
+      setErr(String(e?.message ?? e));
+    }
+  };
+
+  const submit = async () => {
+    if (!state || state.cart.length === 0) return;
+    setSending(true); setErr(null);
+    try {
+      const r = await fetch(`/api/t/${token}/order`, { method: 'POST' });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error ?? `Ошибка ${r.status}`);
+      }
+      await refresh();
+    } catch (e: any) {
+      setErr(String(e?.message ?? e));
+    } finally { setSending(false); }
+  };
+
+  // === Render ===
+  if (showName || !me) {
+    return <NamePrompt tableLabel={tableLabel} onSubmit={setName} />;
   }
+
+  const cart = state?.cart ?? [];
+  const orders = state?.orders ?? [];
+  const others = cart.filter((c) => c.guestId !== me.guestId);
+  const mine = cart.filter((c) => c.guestId === me.guestId);
 
   return (
     <main className="ctr">
       <header className="ctr__head">
         <p className="eyebrow">THE OBJECT · {tableLabel}</p>
         <h1 className="ctr__title">Соберите свой напиток</h1>
-        <label className="ctr__name">
-          <span>Ваше имя</span>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Как к вам обращаться"
-            maxLength={40}
-          />
-        </label>
+        <div className="ctr__you">
+          Вы — <b>{me.name}</b>{' '}
+          <button className="ctr__chname" onClick={() => setShowName(true)}>сменить</button>
+        </div>
       </header>
+
+      {orders.length > 0 && <OrdersHistory orders={orders} />}
 
       <section className="ctr__bases">
         {bases.map((b) => (
           <article key={b.id} className="bcard" onClick={() => setPicking(b)}>
             <h3 className="bcard__name">{b.name}</h3>
             {b.description && <p className="bcard__desc">{b.description}</p>}
-            <div className="bcard__price">{fmt(Number(b.price))} ₽</div>
+            <div className="bcard__price">{fmt(b.price)} ₽</div>
           </article>
         ))}
       </section>
 
-      {cart.length > 0 && (
-        <section className="ctr__cart">
-          <h2 className="ctr__cart-title">Корзина</h2>
-          <ul className="ctr__cart-list">
-            {cart.map((it) => {
-              const unit = computeUnit(it.base, it.selections);
-              return (
-                <li key={it.cid} className="citem">
-                  <div className="citem__main">
-                    <div className="citem__name">{describe(it.base, it.selections)}</div>
-                    <div className="citem__price">{fmt(unit * it.qty)} ₽</div>
-                  </div>
-                  <div className="citem__ctl">
-                    <button onClick={() => changeQty(it.cid, -1)}>−</button>
-                    <span>{it.qty}</span>
-                    <button onClick={() => changeQty(it.cid, +1)}>+</button>
-                    <button className="citem__rm" onClick={() => remove(it.cid)} aria-label="Удалить">✕</button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="ctr__total">
-            <span>Итого</span>
-            <b>{fmt(total)} ₽</b>
-          </div>
-          {err && <p className="ctr__err">{err}</p>}
-          <button className="btn btn--solid ctr__send" disabled={sending} onClick={submit}>
-            {sending ? 'Отправляем…' : 'Отправить бармену'}
-          </button>
-        </section>
-      )}
+      <div className="ctr__pad" />
+
+      <CartBar
+        mine={mine}
+        others={others}
+        total={state?.cartTotal ?? '0'}
+        err={err}
+        sending={sending}
+        onRemove={removeItem}
+        onSubmit={submit}
+        canSubmit={cart.length > 0}
+      />
 
       {picking && (
         <Picker
           base={picking}
           onClose={() => setPicking(null)}
-          onAdd={addToCart}
+          onAdd={(sel, qty) => addToCart(picking, sel, qty)}
         />
       )}
     </main>
   );
 }
 
+/* =========================== ввод имени =========================== */
+function NamePrompt({
+  tableLabel, onSubmit,
+}: { tableLabel: string; onSubmit: (name: string) => void }) {
+  const [v, setV] = useState('');
+  return (
+    <main className="adm adm--login">
+      <form
+        className="login"
+        onSubmit={(e) => { e.preventDefault(); onSubmit(v); }}
+      >
+        <p className="eyebrow">THE OBJECT · {tableLabel}</p>
+        <h1 className="login__title">Здравствуйте</h1>
+        <p className="login__hint">
+          Как к вам обращаться? Имя увидят остальные гости стола и бармен.
+        </p>
+        <label className="login__fld">
+          <span>Имя</span>
+          <input
+            type="text"
+            autoFocus
+            value={v}
+            onChange={(e) => setV(e.target.value)}
+            placeholder="напр. Дима"
+            maxLength={40}
+          />
+        </label>
+        <button type="submit" className="adm__btn" disabled={!v.trim()}>
+          Продолжить
+        </button>
+      </form>
+    </main>
+  );
+}
+
+/* =========================== история заказов =========================== */
+function OrdersHistory({ orders }: { orders: OrderRow[] }) {
+  const statusText: Record<OrderRow['status'], string> = {
+    PENDING: 'Ждём бармена',
+    ACCEPTED: 'Готовится',
+    READY: 'Готов',
+    REJECTED: 'Отклонён',
+  };
+  const statusClass: Record<OrderRow['status'], string> = {
+    PENDING: 'oh__chip--pending',
+    ACCEPTED: 'oh__chip--accepted',
+    READY: 'oh__chip--ready',
+    REJECTED: 'oh__chip--rejected',
+  };
+  return (
+    <section className="oh">
+      <h2 className="oh__title">Уже отправлено</h2>
+      <ul className="oh__list">
+        {orders.map((o) => (
+          <li key={o.id} className="oh__row">
+            <div className="oh__head">
+              <span className="oh__id">#{o.id.slice(-6).toUpperCase()}</span>
+              <span className={`oh__chip ${statusClass[o.status]}`}>{statusText[o.status]}</span>
+              <span className="oh__total">{fmt(o.total)} ₽</span>
+            </div>
+            <ul className="oh__items">
+              {o.items.map((it, i) => (
+                <li key={i}>
+                  <b>{it.qty}×</b> {it.summary}{' '}
+                  <span className="oh__by">— {it.guestName}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/* =========================== корзина (sticky bottom) =========================== */
+function CartBar({
+  mine, others, total, err, sending, onRemove, onSubmit, canSubmit,
+}: {
+  mine: CartLine[];
+  others: CartLine[];
+  total: string;
+  err: string | null;
+  sending: boolean;
+  onRemove: (id: string) => void;
+  onSubmit: () => void;
+  canSubmit: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (mine.length === 0 && others.length === 0) {
+    return null;
+  }
+
+  // Группируем «других» по имени гостя.
+  const byOther = new Map<string, CartLine[]>();
+  for (const c of others) {
+    const arr = byOther.get(c.guestName) ?? [];
+    arr.push(c);
+    byOther.set(c.guestName, arr);
+  }
+
+  return (
+    <section className={`ctr__cart${open ? ' ctr__cart--open' : ''}`}>
+      <button className="ctr__cart-handle" onClick={() => setOpen((o) => !o)}>
+        <span>{open ? 'Свернуть' : `Корзина · ${mine.length + others.length}`}</span>
+        <b>{fmt(total)} ₽</b>
+      </button>
+
+      {open && (
+        <div className="ctr__cart-body">
+          {mine.length > 0 && (
+            <>
+              <h4 className="ctr__cart-group">Моё</h4>
+              <ul className="ctr__cart-list">
+                {mine.map((it) => (
+                  <CartRow key={it.id} item={it} onRemove={onRemove} canRemove />
+                ))}
+              </ul>
+            </>
+          )}
+          {Array.from(byOther.entries()).map(([name, items]) => (
+            <div key={name}>
+              <h4 className="ctr__cart-group">{name}</h4>
+              <ul className="ctr__cart-list">
+                {items.map((it) => (
+                  <CartRow key={it.id} item={it} onRemove={onRemove} />
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="ctr__cart-foot">
+        {err && <p className="ctr__err">{err}</p>}
+        <button
+          className="btn btn--solid ctr__send"
+          disabled={!canSubmit || sending}
+          onClick={onSubmit}
+        >
+          {sending ? 'Отправляем…' : `Отправить бармену · ${fmt(total)} ₽`}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function CartRow({
+  item, onRemove, canRemove,
+}: { item: CartLine; onRemove: (id: string) => void; canRemove?: boolean }) {
+  return (
+    <li className="citem">
+      <div className="citem__main">
+        <div className="citem__name">{item.qty}× {item.summary}</div>
+        <div className="citem__price">{fmt(item.lineTotal)} ₽</div>
+      </div>
+      {canRemove && (
+        <button className="citem__rm" onClick={() => onRemove(item.id)} aria-label="Удалить">✕</button>
+      )}
+    </li>
+  );
+}
+
+/* =========================== модалка выбора =========================== */
 function Picker({
   base, onClose, onAdd,
-}: { base: Base; onClose: () => void; onAdd: (item: CartItem) => void }) {
+}: { base: Base; onClose: () => void; onAdd: (sel: Record<string, string[]>, qty: number) => void }) {
   const [selections, setSelections] = useState<Record<string, string[]>>(() =>
-    Object.fromEntries(base.groups.map((g) => [g.id, g.required && g.minSelect > 0 ? [] : []])),
+    Object.fromEntries(base.groups.map((g) => [g.id, []])),
   );
   const [qty, setQty] = useState(1);
 
@@ -206,11 +401,8 @@ function Picker({
       const cur = s[g.id] ?? [];
       const has = cur.includes(modId);
       let next: string[];
-      if (has) {
-        next = cur.filter((x) => x !== modId);
-      } else {
-        next = g.maxSelect <= 1 ? [modId] : [...cur, modId].slice(0, g.maxSelect);
-      }
+      if (has) next = cur.filter((x) => x !== modId);
+      else next = g.maxSelect <= 1 ? [modId] : [...cur, modId].slice(0, g.maxSelect);
       return { ...s, [g.id]: next };
     });
   };
@@ -223,7 +415,16 @@ function Picker({
     }
   }
 
-  const unit = computeUnit(base, selections);
+  const unit = useMemo(() => {
+    let total = Number(base.price);
+    for (const g of base.groups) {
+      for (const id of selections[g.id] ?? []) {
+        const m = g.modifiers.find((mm) => mm.id === id);
+        if (m) total += Number(m.priceDelta);
+      }
+    }
+    return total;
+  }, [base, selections]);
 
   return (
     <div className="pmodal" role="dialog" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -269,14 +470,7 @@ function Picker({
           <button
             className="btn btn--solid"
             disabled={errors.length > 0}
-            onClick={() =>
-              onAdd({
-                cid: Math.random().toString(36).slice(2),
-                base,
-                selections,
-                qty,
-              })
-            }
+            onClick={() => onAdd(selections, qty)}
           >
             {errors[0] ?? `В корзину · ${fmt(unit * qty)} ₽`}
           </button>

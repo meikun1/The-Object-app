@@ -42,7 +42,8 @@ type OrderWithItems = Order & { items: OrderItem[] };
 
 const short = (id: string) => id.slice(-6).toUpperCase();
 
-/** Полный текст карточки заказа с актуальным статусом и пометками. */
+/** Полный текст карточки заказа с актуальным статусом и пометками.
+ *  Позиции группируются по имени гостя, если в заказе их несколько. */
 export function orderCard(
   order: OrderWithItems,
   tableLabel: string,
@@ -54,11 +55,31 @@ export function orderCard(
   lines.push(head);
   lines.push('');
   lines.push(`🪑 Стол: <b>${esc(tableLabel)}</b>`);
-  lines.push(`👤 Гость: <b>${esc(guestName)}</b>`);
-  lines.push('');
+
+  const byGuest = new Map<string, typeof order.items>();
   for (const it of order.items) {
-    lines.push(`▸ <b>${it.qty}×</b> ${esc(it.summary)}  <i>${it.lineTotal} ₽</i>`);
+    const arr = byGuest.get(it.guestName) ?? [];
+    arr.push(it);
+    byGuest.set(it.guestName, arr);
   }
+
+  if (byGuest.size <= 1) {
+    lines.push(`👤 Гость: <b>${esc(guestName)}</b>`);
+    lines.push('');
+    for (const it of order.items) {
+      lines.push(`▸ <b>${it.qty}×</b> ${esc(it.summary)}  <i>${it.lineTotal} ₽</i>`);
+    }
+  } else {
+    lines.push(`👥 Гостей: <b>${byGuest.size}</b>`);
+    for (const [name, items] of byGuest) {
+      lines.push('');
+      lines.push(`<b>${esc(name)}</b>:`);
+      for (const it of items) {
+        lines.push(`▸ <b>${it.qty}×</b> ${esc(it.summary)}  <i>${it.lineTotal} ₽</i>`);
+      }
+    }
+  }
+
   lines.push('');
   lines.push(`💰 Итого: <b>${order.total} ₽</b>`);
 

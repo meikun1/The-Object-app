@@ -116,21 +116,59 @@ async function runSeed() {
     price: '650', sortOrder: 3,
   });
 
-  // === Лимонады — конструктор ===
+  // === Лимонады — большой конструктор в 4 шага (по эталону из Excel) ===
   await createBase({
-    category: 'Лимонады', name: 'Авторский лимонад',
-    description: 'Свежий, газированный, на ваш вкус.',
-    price: '300', sortOrder: 10,
+    category: 'Лимонады', name: 'Конструктор лимонада',
+    description: 'Соберите свой лимонад: пюре → сироп → подсластитель → газация и добавки.',
+    price: '350', sortOrder: 10,
     groups: [
-      { name: 'Вкус', required: true, minSelect: 1, maxSelect: 1,
-        modifiers: [{ name: 'Малина' }, { name: 'Маракуйя' }, { name: 'Облепиха' }] },
-      { name: 'Газация', required: true, minSelect: 1, maxSelect: 1,
-        modifiers: [{ name: 'С газом', defaultSelected: true }, { name: 'Без газа' }] },
-      { name: 'Доп. сироп', required: false, minSelect: 0, maxSelect: 3,
+      // Шаг 1: фруктовое пюре (одно).
+      { name: 'Шаг 1 · Фруктовое пюре', required: true, minSelect: 1, maxSelect: 1,
         modifiers: [
-          { name: 'Мята', priceDelta: '20' },
-          { name: 'Имбирь', priceDelta: '20' },
-          { name: 'Бузина', priceDelta: '30' },
+          { name: 'Маракуйя' }, { name: 'Кокос' }, { name: 'Щавель' },
+          { name: 'Малина' }, { name: 'Смородина' }, { name: 'Облепиха' },
+          { name: 'Вишня' }, { name: 'Киви' }, { name: 'Фейхоа' },
+          { name: 'Тархун' }, { name: 'Клюква' }, { name: 'Гранат' },
+        ] },
+      // Шаг 2: сироп (один).
+      { name: 'Шаг 2 · Сироп', required: true, minSelect: 1, maxSelect: 1,
+        modifiers: [
+          { name: 'Мандарин' }, { name: 'Бузина' }, { name: 'Банан' },
+          { name: 'Яблоко' }, { name: 'Манго' }, { name: 'Ананас' },
+          { name: 'Бабл гам' }, { name: 'Клубника' }, { name: 'Ваниль' },
+          { name: 'Груша' }, { name: 'Личи' }, { name: 'Грейпфрут' },
+        ] },
+      // Шаг 3: подсластитель (один).
+      { name: 'Шаг 3 · Подсластитель', required: true, minSelect: 1, maxSelect: 1,
+        modifiers: [
+          { name: 'Сироп сахарный', defaultSelected: true },
+          { name: 'Мёд' }, { name: 'Кленовый сироп' },
+          { name: 'Финиковый сироп' }, { name: 'Стевия' },
+          { name: 'Сироп топинамбур' },
+        ] },
+      // Шаг 4: газация (одна).
+      { name: 'Шаг 4 · Газация', required: true, minSelect: 1, maxSelect: 1,
+        modifiers: [
+          { name: 'С газом', defaultSelected: true },
+          { name: 'Без газа' },
+        ] },
+      // Шаг 4: кислотность (одна).
+      { name: 'Шаг 4 · Кислотность', required: true, minSelect: 1, maxSelect: 1,
+        modifiers: [
+          { name: 'Лёгкая' },
+          { name: 'Средняя', defaultSelected: true },
+          { name: 'Кислая' },
+        ] },
+      // Шаг 4: травы (0..3).
+      { name: 'Доп. · Травы', required: false, minSelect: 0, maxSelect: 3,
+        modifiers: [
+          { name: 'Мята' }, { name: 'Розмарин' }, { name: 'Корица' },
+        ] },
+      // Шаг 4: цитрус (0..4).
+      { name: 'Доп. · Цитрус', required: false, minSelect: 0, maxSelect: 4,
+        modifiers: [
+          { name: 'Лимон' }, { name: 'Лайм' },
+          { name: 'Апельсин' }, { name: 'Грейпфрут' },
         ] },
     ],
   });

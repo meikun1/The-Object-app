@@ -1,35 +1,35 @@
 import './globals.css';
+import './landing.css';
 import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
-import { prata, golos, mono } from '@/lib/fonts';
+import { prata, golos, mono, cormorant, jost } from '@/lib/fonts';
 
 export const metadata: Metadata = {
-  title: 'THE OBJECT — Lounge Bar',
+  title: 'THE OBJECT — лаундж-бар & кальянная',
   description:
-    'THE OBJECT — лаунж-бар: авторская барная карта и кальянная комната в эстетике ночного нуара.',
+    'The Object — закрытое пространство для тех, кто ценит ритуал. Авторские миксы табака, барная карта от шефа и приглушённый свет, в котором вечер длится дольше.',
   icons: { icon: '/favicon.svg' },
   openGraph: {
-    title: 'THE OBJECT — Lounge Bar',
-    description: 'Коллекция объектов желания. Бар, кальян, ночь.',
+    title: 'THE OBJECT — лаундж-бар & кальянная',
+    description: 'Дым, вкус и тишина — каждый вечер. Лаундж-бар и кальянная.',
     type: 'website',
     images: ['/img/cocktail.jpg'],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0a0908',
+  themeColor: '#0a0806',
   width: 'device-width',
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ru" className={`${prata.variable} ${golos.variable} ${mono.variable}`}>
-      <body>
-        <div className="grain" aria-hidden="true" />
-        <div className="vignette" aria-hidden="true" />
-        {children}
-      </body>
+    <html
+      lang="ru"
+      className={`${prata.variable} ${golos.variable} ${mono.variable} ${cormorant.variable} ${jost.variable}`}
+    >
+      <body>{children}</body>
     </html>
   );
 }

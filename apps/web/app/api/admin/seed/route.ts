@@ -297,11 +297,50 @@ async function runSeed() {
   await createBase({ category: 'Фреш и милкшейк', name: 'Милкшейк',
     description: 'Мороженое, молоко, сливки, топпинг на выбор.', price: '390', sortOrder: 72 });
 
-  // === Заглушки под будущие разделы (добавляются по мере получения данных) ===
-  // Напитки (вода, соки, кола, тоник, чай в бутылках) — обновить, когда придёт перечень.
-  // Пиво (розливное и бутылированное) — добавить позиции с указанием объёма/крепости.
-  // Снеки — добавить полный список с граммовкой и ценами.
-  // Китайский чай — отдельная категория с описаниями сортов.
+  // === Напитки (вода, газировка, сок, энергетик) ===
+  await createBase({ category: 'Напитки', name: 'Вода с газом',
+    description: 'Минеральная, 0,5 л.', price: '180', sortOrder: 80 });
+  await createBase({ category: 'Напитки', name: 'Вода без газа',
+    description: 'Минеральная, 0,5 л.', price: '180', sortOrder: 81 });
+  await createBase({ category: 'Напитки', name: 'Фанта',
+    description: 'Газированный напиток · 0,33 л.', price: '200', sortOrder: 82 });
+  await createBase({ category: 'Напитки', name: 'Кола',
+    description: 'Газированный напиток · 0,33 л.', price: '200', sortOrder: 83 });
+  await createBase({ category: 'Напитки', name: 'Кола Zero',
+    description: 'Без сахара · 0,33 л.', price: '200', sortOrder: 84 });
+  await createBase({ category: 'Напитки', name: 'Тоник',
+    description: '0,33 л.', price: '200', sortOrder: 85 });
+  await createBase({ category: 'Напитки', name: 'Сок Эль Примо',
+    description: 'Соки в ассортименте · 1 л.', price: '350', sortOrder: 86 });
+  await createBase({ category: 'Напитки', name: 'Red Bull',
+    description: 'Энергетический напиток · 0,25 л.', price: '290', sortOrder: 87 });
+
+  // === Пиво бутылочное ===
+  await createBase({ category: 'Пиво бутылочное', name: 'Lacoste Fresca',
+    description: 'Бутылочное пиво.', price: '390', sortOrder: 90 });
+  await createBase({ category: 'Пиво бутылочное', name: 'Paulaner Weissbier',
+    description: 'Немецкое пшеничное · 0,5 л.', price: '490', sortOrder: 91 });
+  await createBase({ category: 'Пиво бутылочное', name: 'Крушовице non-alco',
+    description: 'Безалкогольное · 0,5 л.', price: '320', sortOrder: 92 });
+
+  // === Пиво розливное ===
+  await createBase({ category: 'Пиво розливное', name: 'Балтика Хеллес',
+    description: 'Светлое лагерное · 0,5 л.', price: '290', sortOrder: 100 });
+
+  // === Китайский чай ===
+  await createBase({ category: 'Китайский чай', name: 'Габа',
+    description: 'Тайваньский улун с высоким содержанием ГАМК.', price: '690', sortOrder: 110 });
+  await createBase({ category: 'Китайский чай', name: 'Тигуанинь',
+    description: 'Знаменитый бирюзовый улун из Аньси.', price: '690', sortOrder: 111 });
+  await createBase({ category: 'Китайский чай', name: 'Да Хун Пао',
+    description: 'Скальный утёсный улун, «Большой красный халат».', price: '890', sortOrder: 112 });
+  await createBase({ category: 'Китайский чай', name: 'Шу пуэр',
+    description: 'Выдержанный, плотный, с земляными нотами.', price: '690', sortOrder: 113 });
+  await createBase({ category: 'Китайский чай', name: 'Шен пуэр',
+    description: 'Молодой, свежий, с травянистым вкусом.', price: '690', sortOrder: 114 });
+
+  // === Снеки — список появится позже ===
+  // (когда пришлёте полный перечень с граммовкой и ценами).
 
   const adminCount = await prisma.staff.count({ where: { role: StaffRole.ADMIN } });
   if (adminCount === 0) {

@@ -409,6 +409,14 @@ body.landing-open .landing .nav-mobile {
   font-family: var(--body); font-size: 13px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--muted);
 }
+/* Список позиций бара с подгруппами (внутри таба) */
+.landing .bar-list { max-width: 760px; margin: 0 auto; }
+.landing .bar-sub {
+  font-family: var(--body); font-size: 11.5px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--accent); margin: 28px 0 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--line-soft);
+}
+.landing .bar-sub:first-child { margin-top: 6px; }
 .landing .bar .col h3 { font-size: 30px; display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
 .landing .bar .col h3 .ln { flex: 1; height: 1px; background: var(--line); }
 .landing .bar .col .sub {

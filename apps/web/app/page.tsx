@@ -168,13 +168,21 @@ export default function Page() {
             <div className="l">
               <span className="eyebrow" data-reveal>Бар</span>
               <h2 className="title" data-reveal data-delay="1">Что в <em>бокале</em></h2>
-              <p className="lead" data-reveal data-delay="2">Авторские коктейли, чай-стимер и лимонады — карта от шефа.</p>
+              <p className="lead" data-reveal data-delay="2">Авторские коктейли, чай-стимер, лимонады, кофе и пиво — карта от шефа.</p>
             </div>
           </div>
-          <div className="cols">
-            <div className="col">
-              <h3>Коктейли <span className="ln" /></h3>
-              <div className="sub">Авторская карта</div>
+
+          <div className="tabs">
+            <button className="tab active" data-tab="bar-cock">Коктейли</button>
+            <button className="tab" data-tab="bar-soft">Чай · Лимонады</button>
+            <button className="tab" data-tab="bar-shots">Сет-шоты</button>
+            <button className="tab" data-tab="bar-coffee">Кофе и фреш</button>
+            <button className="tab" data-tab="bar-beer">Пиво · Напитки</button>
+            <button className="tab" data-tab="bar-cha">Китайский чай</button>
+          </div>
+
+          <div className="tabpane show" data-pane="bar-cock">
+            <div className="bar-list">
               <BarItem name="Опен Объект ★" desc="Окхард, мартини фиеро, персик, супер-джус. Фирменный." price="690" />
               <BarItem name="Негрони" desc="Джин, биттер, мартини россо, апельсин" price="650" />
               <BarItem name="Эспрессо-мартини" desc="Эспрессо, водка, кофейный ликёр" price="650" />
@@ -189,23 +197,95 @@ export default function Page() {
               <BarItem name="Яблочный дайкири" desc="Ром, яблоко, супер-джус" price="590" />
               <BarItem name="Мохито" desc="Ром, лайм, мята, сахар, содовая" price="590" />
             </div>
-            <div className="col">
-              <h3>Чай-стимер · Лимонады <span className="ln" /></h3>
-              <div className="sub">Авторский чай 490 ₽ за чайник · Лимонад от 390 ₽</div>
+          </div>
+
+          <div className="tabpane" data-pane="bar-soft">
+            <div className="bar-list">
+              <div className="bar-sub">Чай авторский · чайник стимер</div>
               <BarItem name="Лесные ягоды" desc="Малина, гренадин, мята, чай ассам" price="490" />
-              <BarItem name="Малина-маракуйя (чай)" desc="Малина, маракуйя, апельсин, фруктовый чай" price="490" />
-              <BarItem name="Облепиха-имбирь" desc="Облепиха, мёд, имбирь, специи" price="490" />
+              <BarItem name="Малина-маракуйя" desc="Малина, маракуйя, апельсин, фруктовый чай" price="490" />
+              <BarItem name="Облепиха-имбирь" desc="Облепиха, мёд, имбирь, травяной чай, специи" price="490" />
+              <BarItem name="Яблоко-лайм" desc="Яблоко, лайм, мята, чай жасмин" price="490" />
+              <BarItem name="Смородина-мята" desc="Смородина, грейпфрут, мята, чай ассам" price="490" />
               <BarItem name="Хвойный чай" desc="Хвоя, мёд, розмарин, лайм, мята" price="490" />
+              <div className="bar-sub">Лимонады · хайбол или графин</div>
+              <BarItem name="Конструктор лимонада" desc="Пюре → сироп → подсластитель → газация и гарниш" price="390" />
               <BarItem name="Облепиха-цитрус" desc="Облепиха, мандарин, лимон, апельсин, грейпфрут" price="390" />
               <BarItem name="Яблоко-кокос" desc="Кокос, яблоко, кокосовое молоко, стружка" price="390" />
               <BarItem name="Ягодный взрыв" desc="Малина, смородина, бузина, мята, лимон" price="390" />
-              <BarItem name="Конструктор лимонада" desc="Пюре → сироп → подсластитель → газация и гарниш" price="390" />
+              <BarItem name="Малина-маракуйя" desc="Малина, маракуйя, мята, лимон" price="390" />
+              <BarItem name="Груша-базилик" desc="Груша, базилик, лимон" price="390" />
+              <div className="bar-sub">Коктейли без алкоголя</div>
               <BarItem name="Мохито б/а" desc="Лайм, мята, сахар, содовая" price="390" />
+              <BarItem name="Апероль б/а" desc="Сироп апероль, тоник, апельсин" price="390" />
+              <BarItem name="Малиновый закат" desc="Малина, апельсин, гренадин, тоник" price="390" />
               <BarItem name="Пина колада б/а" desc="Сливки, кокос, ананас" price="450" />
             </div>
           </div>
+
+          <div className="tabpane" data-pane="bar-shots">
+            <div className="bar-list">
+              <div className="bar-sub">Сеты по 5 шотов · шейк</div>
+              <BarItem name="Русский шот-сет" desc="Облепиха, мёд, водка" price="1200" />
+              <BarItem name="Как на Бали" desc="Маракуйя, манго, ром, водка" price="1200" />
+              <BarItem name="Very Berry Set" desc="Малина, смородина, клубника, водка, джин" price="1200" />
+              <div className="bar-sub">Шот · лейринг</div>
+              <BarItem name="Б-52" desc="Кофейный ликёр, сливочный ликёр, трипл-сек" price="290" />
+              <BarItem name="Б-53" desc="Кофейный ликёр, сливочный ликёр, абсент" price="290" />
+              <BarItem name="Опухоль мозга" desc="Самбука, мартини бьянко, гренадин, сливочный ликёр" price="290" />
+              <BarItem name="Зелёный мексиканец" desc="Дынный ликёр, текила, супер-джус" price="290" />
+            </div>
+          </div>
+
+          <div className="tabpane" data-pane="bar-coffee">
+            <div className="bar-list">
+              <div className="bar-sub">Кофе</div>
+              <BarItem name="Эспрессо" desc="Двойной, плотный" price="180" />
+              <BarItem name="Кофе по-восточному" desc="В турке, на песке" price="220" />
+              <BarItem name="Американо" desc="Эспрессо + горячая вода" price="220" />
+              <BarItem name="Капучино" desc="Эспрессо, бархатная молочная пенка" price="280" />
+              <BarItem name="Раф" desc="Сливки, ваниль, эспрессо" price="340" />
+              <BarItem name="Айс-латте" desc="Эспрессо, молоко, сироп, лёд" price="320" />
+              <BarItem name="Латте" desc="Эспрессо, молоко" price="320" />
+              <BarItem name="Бамбл" desc="Эспрессо, апельсиновый фреш, сироп" price="380" />
+              <BarItem name="Флэт-уайт" desc="Двойной эспрессо, микропена" price="320" />
+              <div className="bar-sub">Фреши и милкшейк</div>
+              <BarItem name="Фреш апельсиновый" desc="100% свежий апельсин · 250 мл" price="390" />
+              <BarItem name="Фреш грейпфрутовый" desc="100% свежий грейпфрут · 250 мл" price="390" />
+              <BarItem name="Милкшейк" desc="Мороженое, молоко, сливки, топпинг" price="390" />
+            </div>
+          </div>
+
+          <div className="tabpane" data-pane="bar-beer">
+            <div className="bar-list">
+              <div className="bar-sub">Пиво розливное</div>
+              <BarItem name="Балтика Хеллес" desc="Светлое лагерное · 0,5 л" price="290" />
+              <div className="bar-sub">Пиво бутылочное</div>
+              <BarItem name="Lacoste Fresca" desc="Бутылочное" price="390" />
+              <BarItem name="Paulaner Weissbier" desc="Немецкое пшеничное · 0,5 л" price="490" />
+              <BarItem name="Крушовице non-alco" desc="Безалкогольное · 0,5 л" price="320" />
+              <div className="bar-sub">Безалкогольные напитки</div>
+              <BarItem name="Вода с газом" desc="Минеральная, 0,5 л" price="180" />
+              <BarItem name="Вода без газа" desc="Минеральная, 0,5 л" price="180" />
+              <BarItem name="Кола · Кола Zero · Фанта · Тоник" desc="0,33 л" price="200" />
+              <BarItem name="Сок Эль Примо" desc="В ассортименте · 1 л" price="350" />
+              <BarItem name="Red Bull" desc="Энергетик · 0,25 л" price="290" />
+            </div>
+          </div>
+
+          <div className="tabpane" data-pane="bar-cha">
+            <div className="bar-list">
+              <div className="bar-sub">Заваривается в гайвани, подаётся к столу</div>
+              <BarItem name="Габа" desc="Тайваньский улун с высоким содержанием ГАМК" price="690" />
+              <BarItem name="Тигуанинь" desc="Бирюзовый улун из Аньси" price="690" />
+              <BarItem name="Да Хун Пао" desc="Скальный улун, «Большой красный халат»" price="890" />
+              <BarItem name="Шу пуэр" desc="Выдержанный, плотный, с земляными нотами" price="690" />
+              <BarItem name="Шен пуэр" desc="Молодой, свежий, с травянистым вкусом" price="690" />
+            </div>
+          </div>
+
           <p className="bar-note">
-            Полная карта — кофе, фреши, сет-шоты — открывается в QR-меню за вашим столом.
+            Цены ориентировочные. Полная актуальная карта — в QR-меню за вашим столом.
           </p>
         </div>
       </section>

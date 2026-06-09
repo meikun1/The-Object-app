@@ -76,8 +76,9 @@ export default function BookingForm() {
         <div className="field">
           <label>Гостей</label>
           <div className="guests">
-            <button type="button">2</button>
-            <button type="button" className="sel">3–4</button>
+            <button type="button">1</button>
+            <button type="button" className="sel">2</button>
+            <button type="button">3–4</button>
             <button type="button">5–6</button>
             <button type="button">7+</button>
           </div>

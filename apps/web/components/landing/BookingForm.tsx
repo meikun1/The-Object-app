@@ -36,7 +36,9 @@ export default function BookingForm() {
 
   if (done) {
     return (
-      <div className="form" data-reveal data-delay="2">
+      // data-reveal НЕ ставим: новый узел не наблюдается IntersectionObserver'ом
+      // и оставался бы opacity:0 — то самое «исчезает окно после отправки».
+      <div className="form">
         <div className="ok">
           <div className="ic">✦</div>
           <h3>Заявка принята</h3>

@@ -273,7 +273,6 @@ export default function Page() {
                     ул. Адмиральского, 37а
                   </a>
                 </div>
-                <div className="s">Вход со двора · под вывеской «O»</div>
               </div>
               <div className="cinfo" data-reveal data-delay="2">
                 <div className="k">Телефон</div>

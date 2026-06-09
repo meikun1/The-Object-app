@@ -125,36 +125,35 @@ export default function Page() {
           <div className="tabs" data-reveal>
             <button className="tab active" data-tab="classic">Классика</button>
             <button className="tab" data-tab="premium">Премиум</button>
-            <button className="tab" data-tab="author">Авторские</button>
-            <button className="tab" data-tab="tobacco">Табаки</button>
+            <button className="tab" data-tab="parfume">Парфюм</button>
+            <button className="tab" data-tab="cigar">Сигары</button>
           </div>
 
           <div className="tabpane show" data-pane="classic">
-            <div className="cards">
-              <HookahCard idx="01" name="Двойное яблоко" price="1200" desc="Тот самый вкус, с которого начинается каждый вечер. Плотный дым, мягкая пряность." tags={['Классика', 'Крепкий']} />
-              <HookahCard idx="02" name="Мята & лёд" price="1200" desc="Свежесть, которая бодрит. Холодок на вдохе и долгое прохладное послевкусие." tags={['Свежий', 'Лёгкий']} />
-              <HookahCard idx="03" name="Виноград" price="1200" desc="Сочный, чуть сладкий, понятный каждому. Идеален для долгой беседы." tags={['Сладкий', 'Средний']} />
+            <div className="brand-grid">
+              {[
+                'Blackburn', 'Overdose', 'Satir aroma line', 'Dogma', 'Наш', 'База',
+                'MustHave', 'Darkside', 'Spectrum classic', 'Sebero classic', 'Sebero black',
+                'Jent', 'Сарма', 'Северный professional', 'Северный',
+                'Blansh', 'Starline', 'Palitra', 'Bliss',
+              ].map((b) => <span key={b} className="brand-chip">{b}</span>)}
             </div>
           </div>
           <div className="tabpane" data-pane="premium">
-            <div className="cards">
-              <HookahCard idx="01" name="На грейпфруте" price="1900" desc="Чаша из свежего грейпфрута. Цитрусовая горчинка раскрывает вкус табака по-новому." tags={['Fruit-bowl', 'Цитрус']} />
-              <HookahCard idx="02" name="На молоке" price="1700" desc="Колба на молоке смягчает дым до бархата. Сливочное, обволакивающее послевкусие." tags={['Soft', 'Сливочный']} />
-              <HookahCard idx="03" name="На ананасе" price="2100" desc="Тропическая чаша на половине ананаса. Сочно, ярко, по-настоящему празднично." tags={['Fruit-bowl', 'Тропики']} />
+            <div className="brand-grid">
+              {['Kraken', 'Bonche', 'Satyr platinum', 'Jent cigar', 'Tangiers']
+                .map((b) => <span key={b} className="brand-chip brand-chip--premium">{b}</span>)}
             </div>
           </div>
-          <div className="tabpane" data-pane="author">
-            <div className="cards">
-              <HookahCard idx="01" name="Тихий вечер" price="2400" desc="Микс инжира, выдержанного табака и лёгкой ванили. Тёплый, медитативный, наш фирменный." tags={['Signature', 'Десертный']} />
-              <HookahCard idx="02" name="Чёрный объект" price="2600" desc="Смелый купаж чёрной смородины, специй и табачного листа. Для тех, кто любит характер." tags={['Signature', 'Крепкий']} />
-              <HookahCard idx="03" name="Сад на крыше" price="2400" desc="Персик, базилик и капля бергамота. Свежий и парфюмерный — любимец летних вечеров." tags={['Signature', 'Свежий']} />
+          <div className="tabpane" data-pane="parfume">
+            <div className="brand-grid brand-grid--solo">
+              <span className="brand-chip brand-chip--feature">Dogma · парфюмированная линейка</span>
             </div>
           </div>
-          <div className="tabpane" data-pane="tobacco">
-            <div className="cards">
-              <HookahCard idx="01" name="Tangiers" price="от 1400" desc="Крепкий американский табак с насыщенным вкусом. Для опытных гостей." tags={['Крепкий']} />
-              <HookahCard idx="02" name="DarkSide" price="от 1300" desc="Глубокие сложные вкусы и плотный дым. Золотая середина крепости." tags={['Средний']} />
-              <HookahCard idx="03" name="MustHave" price="от 1100" desc="Лёгкий, ароматный, без лишней крепости. Отличный старт вечера." tags={['Лёгкий']} />
+          <div className="tabpane" data-pane="cigar">
+            <div className="brand-grid brand-grid--solo">
+              <span className="brand-chip brand-chip--feature">Dogma · Андре Гигант</span>
+              <p className="brand-note">Полнокомпонентная сигара ручной скрутки.</p>
             </div>
           </div>
         </div>
@@ -344,22 +343,6 @@ export default function Page() {
         </div>
       </footer>
     </div>
-  );
-}
-
-function HookahCard({ idx, name, price, desc, tags }: { idx: string; name: string; price: string; desc: string; tags: string[] }) {
-  return (
-    <article className="card" data-reveal data-delay="1">
-      <div className="idx">{idx}</div>
-      <div className="top">
-        <h3>{name}</h3>
-        <div className="price">{price}<small> ₽</small></div>
-      </div>
-      <p>{desc}</p>
-      <div className="tagrow">
-        {tags.map((t) => <span key={t} className="chip">{t}</span>)}
-      </div>
-    </article>
   );
 }
 

@@ -99,32 +99,58 @@ async function runSeed() {
     });
   };
 
-  // === Коктейли (без модификаторов — добавляются в 1 тап) ===
-  await createBase({
-    category: 'Коктейли', name: 'Негрони',
-    description: 'Джин, биттер, мартини россо, апельсин.',
-    price: '550', sortOrder: 1,
-  });
-  await createBase({
-    category: 'Коктейли', name: 'Эспрессо-мартини',
-    description: 'Эспрессо, водка, кофейный ликёр.',
-    price: '550', sortOrder: 2,
-  });
-  await createBase({
-    category: 'Коктейли', name: 'Опен Объект',
-    description: 'Фирменный: оркард, фиеро, персик, супер-джус.',
-    price: '650', sortOrder: 3,
-  });
+  // Меню из актуальной карты заведения. Цены — плейсхолдеры (PDF был без
+  // рублёвых цен), точные значения настраиваются в /admin → Меню.
 
-  // === Лимонады — конструктор в 4 шага ===
-  // Группы с префиксом «Шаг N · …» автоматически собираются в один шаг
-  // под общим заголовком на странице конструктора.
+  // === Чай авторский ===
+  await createBase({ category: 'Чай', name: 'Лесные ягоды',
+    description: 'Малина, гренадин, мята, чай ассам · чайник стимер.',
+    price: '490', sortOrder: 1 });
+  await createBase({ category: 'Чай', name: 'Малина-маракуйя',
+    description: 'Малина, маракуйя, апельсин, фруктовый чай · чайник стимер.',
+    price: '490', sortOrder: 2 });
+  await createBase({ category: 'Чай', name: 'Облепиха-имбирь',
+    description: 'Облепиха, мёд, имбирь, травяной чай, специи · чайник стимер.',
+    price: '490', sortOrder: 3 });
+  await createBase({ category: 'Чай', name: 'Яблоко-лайм',
+    description: 'Яблоко, лайм, мята, чай жасмин · чайник стимер.',
+    price: '490', sortOrder: 4 });
+  await createBase({ category: 'Чай', name: 'Смородина-мята',
+    description: 'Смородина, грейпфрут, мята, чай ассам, специи · чайник стимер.',
+    price: '490', sortOrder: 5 });
+  await createBase({ category: 'Чай', name: 'Хвойный чай',
+    description: 'Варенье из хвои, мёд, розмарин, лайм, мята, травяной чай · чайник стимер.',
+    price: '490', sortOrder: 6 });
+
+  // === Сет-шоты ===
+  await createBase({ category: 'Сет-шоты', name: 'Русский шот-сет',
+    description: 'Облепиха, мёд, водка · сет 5 шотов, шейк.',
+    price: '1200', sortOrder: 10 });
+  await createBase({ category: 'Сет-шоты', name: 'Как на Бали',
+    description: 'Маракуйя, манго, ром, водка · сет 5 шотов, шейк.',
+    price: '1200', sortOrder: 11 });
+  await createBase({ category: 'Сет-шоты', name: 'Very Berry Set',
+    description: 'Малина, смородина, клубника, водка, джин · сет 5 шотов, шейк.',
+    price: '1200', sortOrder: 12 });
+  await createBase({ category: 'Сет-шоты', name: 'Б-52',
+    description: 'Кофейный ликёр, сливочный ликёр, трипл-сек · шот, лейринг.',
+    price: '290', sortOrder: 13 });
+  await createBase({ category: 'Сет-шоты', name: 'Б-53',
+    description: 'Кофейный ликёр, сливочный ликёр, абсент · шот, лейринг.',
+    price: '290', sortOrder: 14 });
+  await createBase({ category: 'Сет-шоты', name: 'Опухоль мозга',
+    description: 'Самбука, мартини бьянко, гренадин, сливочный ликёр · шот, лейринг.',
+    price: '290', sortOrder: 15 });
+  await createBase({ category: 'Сет-шоты', name: 'Зелёный мексиканец',
+    description: 'Дынный ликёр, текила, супер-джус · шот, лейринг.',
+    price: '290', sortOrder: 16 });
+
+  // === Лимонады — конструктор + 5 авторских с выбором размера ===
   await createBase({
     category: 'Лимонады', name: 'Конструктор лимонада',
     description: 'Соберите свой лимонад: пюре → сироп → подсластитель → газация и гарниш.',
-    price: '390', sortOrder: 10,
+    price: '390', sortOrder: 20,
     groups: [
-      // Шаг 1: фруктовое пюре (одно, в стоимости).
       { name: 'Шаг 1 · Пюре', required: true, minSelect: 1, maxSelect: 1,
         modifiers: [
           { name: 'Клубника', defaultSelected: true },
@@ -132,37 +158,30 @@ async function runSeed() {
           { name: 'Вишня' }, { name: 'Персик' },
           { name: 'Чёрная смородина' }, { name: 'Тархун' },
         ] },
-      // Шаг 2: сироп (один, в стоимости).
       { name: 'Шаг 2 · Сироп', required: true, minSelect: 1, maxSelect: 1,
         modifiers: [
           { name: 'Без сиропа', defaultSelected: true },
           { name: 'Базилик' }, { name: 'Лаванда' }, { name: 'Бузина' },
           { name: 'Имбирь' }, { name: 'Лемонграсс' },
         ] },
-      // Шаг 3: подсластитель (один).
       { name: 'Шаг 3 · Подсластитель', required: true, minSelect: 1, maxSelect: 1,
         modifiers: [
           { name: 'Сахарный сироп', defaultSelected: true },
-          { name: 'Мёд' },
-          { name: 'Кленовый сироп' },
-          { name: 'Финиковый сироп' },
-          { name: 'Стевия' },
+          { name: 'Мёд' }, { name: 'Кленовый сироп' },
+          { name: 'Финиковый сироп' }, { name: 'Стевия' },
           { name: 'Сироп топинамбура' },
         ] },
-      // Шаг 4: газация.
       { name: 'Шаг 4 · Вода', required: true, minSelect: 1, maxSelect: 1,
         modifiers: [
           { name: 'С газом', defaultSelected: true },
           { name: 'Без газа' },
         ] },
-      // Шаг 5: кислотность.
       { name: 'Шаг 5 · Кислотность', required: true, minSelect: 1, maxSelect: 1,
         modifiers: [
           { name: 'Не кислый' },
           { name: 'Баланс', defaultSelected: true },
           { name: 'Кислый' },
         ] },
-      // Шаг 6: гарниш — до 3.
       { name: 'Шаг 6 · Гарниш', required: false, minSelect: 0, maxSelect: 3,
         modifiers: [
           { name: 'Мята' }, { name: 'Розмарин' }, { name: 'Корица' },
@@ -171,59 +190,118 @@ async function runSeed() {
     ],
   });
 
-  // === Коктейли (из шаблона QR-меню) ===
-  await createBase({ category: 'Коктейли', name: 'Old Object',
-    description: 'Бурбон, выдержанный вермут, дымная горечь.',
-    price: '690', sortOrder: 20 });
-  await createBase({ category: 'Коктейли', name: 'Бархатный Негрони',
-    description: 'Джин, кампари, апельсиновое масло.',
-    price: '650', sortOrder: 21 });
-  await createBase({ category: 'Коктейли', name: 'Дымный сауэр',
-    description: 'Мескаль, лайм, тимьян, белок.',
-    price: '720', sortOrder: 22 });
-  await createBase({ category: 'Коктейли', name: 'Эспрессо Мартини',
-    description: 'Водка, кофейный ликёр, свежий эспрессо.',
-    price: '680', sortOrder: 23 });
+  // Авторские лимонады: единая группа размера (хайбол / графин).
+  const lemonadeSize = [{
+    name: 'Размер', required: true, minSelect: 1, maxSelect: 1,
+    modifiers: [
+      { name: 'Хайбол · 250 мл', priceDelta: '0', defaultSelected: true },
+      { name: 'Графин · 750 мл', priceDelta: '500' },
+    ],
+  }];
+  await createBase({ category: 'Лимонады', name: 'Облепиха-цитрус',
+    description: 'Облепиха, мандарин, лимон, апельсин, грейпфрут.',
+    price: '390', sortOrder: 21, groups: lemonadeSize });
+  await createBase({ category: 'Лимонады', name: 'Яблоко-кокос',
+    description: 'Кокос, яблоко, кокосовое молоко, стружка.',
+    price: '390', sortOrder: 22, groups: lemonadeSize });
+  await createBase({ category: 'Лимонады', name: 'Ягодный взрыв',
+    description: 'Малина, смородина, бузина, мята, лимон.',
+    price: '390', sortOrder: 23, groups: lemonadeSize });
+  await createBase({ category: 'Лимонады', name: 'Малина-маракуйя',
+    description: 'Малина, маракуйя, мята, лимон.',
+    price: '390', sortOrder: 24, groups: lemonadeSize });
+  await createBase({ category: 'Лимонады', name: 'Груша-базилик',
+    description: 'Груша, базилик, лимон.',
+    price: '390', sortOrder: 25, groups: lemonadeSize });
 
-  // === Напитки ===
-  await createBase({ category: 'Напитки', name: 'Вода с газом',
-    description: 'Минеральная, 0,5 л.', price: '180', sortOrder: 40 });
-  await createBase({ category: 'Напитки', name: 'Вода без газа',
-    description: 'Минеральная, 0,5 л.', price: '180', sortOrder: 41 });
-  await createBase({ category: 'Напитки', name: 'Свежевыжатый сок',
-    description: 'Апельсин, грейпфрут или яблоко · 250 мл.', price: '320', sortOrder: 42 });
-  await createBase({ category: 'Напитки', name: 'Чайник чая',
-    description: 'Облепиха-имбирь или классический · 1 л.', price: '450', sortOrder: 43 });
-  await createBase({ category: 'Напитки', name: 'Кола / Тоник',
-    description: 'Газированный напиток на выбор, 0,33 л.', price: '200', sortOrder: 44 });
+  // === Коктейли без алкоголя ===
+  await createBase({ category: 'Коктейли б/а', name: 'Мохито б/а',
+    description: 'Лайм, мята, сахар, содовая · хайбол, мадлен.',
+    price: '390', sortOrder: 30 });
+  await createBase({ category: 'Коктейли б/а', name: 'Апероль б/а',
+    description: 'Сироп апероль, тоник, апельсин · винный бокал, билд.',
+    price: '390', sortOrder: 31 });
+  await createBase({ category: 'Коктейли б/а', name: 'Малиновый закат',
+    description: 'Малина, апельсин, гренадин, тоник · билд.',
+    price: '390', sortOrder: 32 });
+  await createBase({ category: 'Коктейли б/а', name: 'Пина колада б/а',
+    description: 'Сливки, кокос, ананас · харрикейн, шейк.',
+    price: '450', sortOrder: 33 });
 
-  // === Снеки ===
-  await createBase({ category: 'Снеки', name: 'Орешки ассорти',
-    description: 'Миндаль, кешью, фундук с морской солью.', price: '320', sortOrder: 50 });
-  await createBase({ category: 'Снеки', name: 'Начос с сыром',
-    description: 'Кукурузные чипсы, сырный соус, халапеньо.', price: '390', sortOrder: 51 });
-  await createBase({ category: 'Снеки', name: 'Сырные палочки',
-    description: 'Моцарелла в хрустящей панировке · 6 шт.', price: '360', sortOrder: 52 });
-  await createBase({ category: 'Снеки', name: 'Оливки & маслины',
-    description: 'С лимоном, чесноком и прованскими травами.', price: '280', sortOrder: 53 });
-  await createBase({ category: 'Снеки', name: 'Картофель фри',
-    description: 'Трюфельный, с пармезаном и зеленью.', price: '320', sortOrder: 54 });
-  await createBase({ category: 'Снеки', name: 'Попкорн карамельный',
-    description: 'Солёная карамель, тёплый.', price: '240', sortOrder: 55 });
+  // === Коктейли ===
+  await createBase({ category: 'Коктейли', name: 'Апероль шприц',
+    description: 'Апероль, игристое, содовая, апельсин · винный бокал, билд.',
+    price: '590', sortOrder: 40 });
+  await createBase({ category: 'Коктейли', name: 'Яблочный дайкири',
+    description: 'Ром, яблоко, супер-джус · коктейльная рюмка, шейк.',
+    price: '590', sortOrder: 41 });
+  await createBase({ category: 'Коктейли', name: 'Лонг-Айленд',
+    description: 'Ром, джин, водка, текила, трипл-сек, кола, лайм · хайбол, билд.',
+    price: '690', sortOrder: 42 });
+  await createBase({ category: 'Коктейли', name: 'Негрони',
+    description: 'Джин, биттер, мартини россо, апельсин · рокс, стир.',
+    price: '650', sortOrder: 43 });
+  await createBase({ category: 'Коктейли', name: 'Эспрессо-мартини',
+    description: 'Эспрессо, водка, кофейный ликёр · коктейльная рюмка, шейк.',
+    price: '650', sortOrder: 44 });
+  await createBase({ category: 'Коктейли', name: 'Виски-сауэр',
+    description: 'Виски, сахарный сироп, супер-джус, лимон, BabL Drop · рокс, дабл-шейк.',
+    price: '690', sortOrder: 45 });
+  await createBase({ category: 'Коктейли', name: 'Фиеро-тоник',
+    description: 'Мартини фиеро, тоник, содовая, грейпфрут · винный бокал, билд.',
+    price: '590', sortOrder: 46 });
+  await createBase({ category: 'Коктейли', name: 'Ягодный слинг',
+    description: 'Джин, биттер, ананас, вишня, лимон, супер-джус · хайбол, шейк.',
+    price: '650', sortOrder: 47 });
+  await createBase({ category: 'Коктейли', name: 'Опен Объект',
+    description: 'Фирменный: окхард, мартини фиеро, персик, супер-джус · шале, шейк.',
+    price: '690', sortOrder: 48 });
+  await createBase({ category: 'Коктейли', name: 'Мэджик Вуду',
+    description: 'Текила, ликёр дыня, апельсин, яблоко, блю, кокос, супер-джус · винный бокал, билд.',
+    price: '690', sortOrder: 49 });
+  await createBase({ category: 'Коктейли', name: 'Дарк Флава',
+    description: 'Блю, гренадин, бузина, трипл-сек, лимончелло, игристое · винный бокал, билд.',
+    price: '690', sortOrder: 50 });
+  await createBase({ category: 'Коктейли', name: 'Барби',
+    description: 'Лимончелло, клубника, супер-джус, содовая, лимон · хайбол, шейк.',
+    price: '590', sortOrder: 51 });
+  await createBase({ category: 'Коктейли', name: 'Мохито',
+    description: 'Ром, лайм, мята, сахар, содовая · хайбол, мадлен.',
+    price: '590', sortOrder: 52 });
 
-  // === Кофе (статичные позиции из шаблона QR-меню) ===
+  // === Кофе ===
   await createBase({ category: 'Кофе', name: 'Эспрессо',
-    description: 'Двойной, плотный, с тонкой крема.', price: '180', sortOrder: 30 });
-  await createBase({ category: 'Кофе', name: 'Капучино',
-    description: 'Бархатная молочная пенка, баланс вкуса.', price: '280', sortOrder: 31 });
-  await createBase({ category: 'Кофе', name: 'Латте',
-    description: 'Мягкий, на большом объёме молока.', price: '320', sortOrder: 32 });
-  await createBase({ category: 'Кофе', name: 'Раф',
-    description: 'Сливочный, с ванилью и тростниковым сахаром.', price: '340', sortOrder: 33 });
+    description: '12 г кофе, насыщенный.', price: '180', sortOrder: 60 });
+  await createBase({ category: 'Кофе', name: 'Кофе по-восточному',
+    description: '8 г кофе, в турке на песке.', price: '220', sortOrder: 61 });
   await createBase({ category: 'Кофе', name: 'Американо',
-    description: 'Эспрессо, разбавленный горячей водой.', price: '220', sortOrder: 34 });
-  await createBase({ category: 'Кофе', name: 'Флэт уайт',
-    description: 'Двойной эспрессо и тонкий слой микропены.', price: '320', sortOrder: 35 });
+    description: '12 г кофе, разбавленный горячей водой.', price: '220', sortOrder: 62 });
+  await createBase({ category: 'Кофе', name: 'Капучино',
+    description: '12 г кофе, 190 г молока.', price: '280', sortOrder: 63 });
+  await createBase({ category: 'Кофе', name: 'Раф',
+    description: '12 г кофе, 190 г сливки, ванильный сироп.', price: '340', sortOrder: 64 });
+  await createBase({ category: 'Кофе', name: 'Айс-латте',
+    description: '12 г кофе, 230 г молока, сироп, лёд.', price: '320', sortOrder: 65 });
+  await createBase({ category: 'Кофе', name: 'Латте',
+    description: '12 г кофе, 230 г молока.', price: '320', sortOrder: 66 });
+  await createBase({ category: 'Кофе', name: 'Бамбл',
+    description: '18 г кофе, 250 г апельсинового фреша, сироп.', price: '380', sortOrder: 67 });
+  await createBase({ category: 'Кофе', name: 'Флэт-уайт',
+    description: '18 г кофе, 190 г молока, тонкий слой микропены.', price: '320', sortOrder: 68 });
+
+  // === Фреш и милкшейк ===
+  await createBase({ category: 'Фреш и милкшейк', name: 'Фреш апельсиновый',
+    description: '100% свежий апельсин · 250 мл.', price: '390', sortOrder: 70 });
+  await createBase({ category: 'Фреш и милкшейк', name: 'Фреш грейпфрутовый',
+    description: '100% свежий грейпфрут · 250 мл.', price: '390', sortOrder: 71 });
+  await createBase({ category: 'Фреш и милкшейк', name: 'Милкшейк',
+    description: 'Мороженое, молоко, сливки, топпинг на выбор.', price: '390', sortOrder: 72 });
+
+  // === Заглушки под будущие разделы (добавляются по мере получения данных) ===
+  // Напитки (вода, соки, кола, тоник, чай в бутылках) — обновить, когда придёт перечень.
+  // Пиво (розливное и бутылированное) — добавить позиции с указанием объёма/крепости.
+  // Снеки — добавить полный список с граммовкой и ценами.
+  // Китайский чай — отдельная категория с описаниями сортов.
 
   const adminCount = await prisma.staff.count({ where: { role: StaffRole.ADMIN } });
   if (adminCount === 0) {

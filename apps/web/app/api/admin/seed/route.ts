@@ -32,9 +32,18 @@ export async function POST(req: Request) {
 }
 
 async function runSeed() {
+  // --- Сбрасываем всё связанное со столами и меню в правильном порядке ---
+  // Идём от листьев к корням, чтобы FK не блокировали удаление.
+  // CartItem / Order чистятся вручную — они блокируют удаление Base/Table.
+  await prisma.cartItem.deleteMany();           // каскадом подчистит CartItemModifier
+  await prisma.order.deleteMany();              // каскадом OrderItem
+  await prisma.guest.deleteMany();
+  await prisma.tableSession.deleteMany();
+  await prisma.base.deleteMany();               // каскадом ModifierGroup + Modifier
+  await prisma.table.deleteMany();
+  await prisma.auditLog.deleteMany();
 
   // --- Столы: 13 в зале + 2 VIP ---
-  await prisma.table.deleteMany();
   const tables = [
     ...Array.from({ length: 13 }, (_, i) => ({
       label: `Стол ${i + 1}`,
@@ -46,8 +55,7 @@ async function runSeed() {
   ];
   for (const t of tables) await prisma.table.create({ data: t });
 
-  // --- Конструктор: 3 основы ---
-  await prisma.base.deleteMany();
+  // --- Меню (создаётся ниже через createBase) ---
 
   const createBase = async (base: {
     name: string;

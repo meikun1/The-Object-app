@@ -492,30 +492,24 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
 .landing .socials a:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
 .landing .map {
   position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
-  min-height: 420px;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 38px, var(--line-soft) 38px 39px),
-    repeating-linear-gradient(90deg, transparent 0 38px, var(--line-soft) 38px 39px),
-    radial-gradient(60% 60% at 60% 40%, rgba(231, 203, 138, .05), transparent 70%),
-    var(--bg-3);
+  min-height: 420px; background: var(--bg-3);
 }
-.landing .map .road { position: absolute; background: var(--line); }
-.landing .map .pin { position: absolute; left: 58%; top: 46%; transform: translate(-50%, -100%); z-index: 3; }
-.landing .map .pin .dot {
-  width: 18px; height: 18px; border-radius: 50%; background: var(--accent);
-  box-shadow: 0 0 0 6px var(--tint), 0 0 30px 4px var(--glow); margin: 0 auto;
-  animation: pulse 2.4s ease-out infinite;
+.landing .map iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: 0;
+  /* Слегка приглушаем яркость и красноту яндекс-карт, чтобы карта дружила с золотой палитрой */
+  filter: grayscale(.25) brightness(.86) contrast(1.05);
 }
-.landing .map .pin .lbl {
-  margin-top: 10px; background: var(--panel); border: 1px solid var(--line);
-  padding: 8px 14px; border-radius: 3px; font-size: 12px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--accent-2); white-space: nowrap;
+.landing .map-open {
+  position: absolute; right: 14px; bottom: 14px; z-index: 2;
+  background: var(--panel); border: 1px solid var(--accent); color: var(--accent);
+  padding: 8px 14px; border-radius: 30px;
+  font-family: var(--body); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase;
+  backdrop-filter: blur(6px);
+  transition: background .3s, color .3s;
 }
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 6px var(--tint), 0 0 0 0 var(--glow); }
-  70% { box-shadow: 0 0 0 6px var(--tint), 0 0 0 22px transparent; }
-  100% { box-shadow: 0 0 0 6px var(--tint), 0 0 0 0 transparent; }
-}
+.landing .map-open:hover { background: var(--accent); color: var(--bg); }
+.landing .reviews-more { display: flex; justify-content: center; margin-top: 36px; }
 
 /* ---------- FOOTER ---------- */
 .landing .footer { background: var(--bg-2); border-top: 1px solid var(--line-soft); padding: 70px 0 36px; }
@@ -566,4 +560,107 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
 }
 @media (min-width: 861px) {
   .landing .nav-mobile { display: none; }
+}
+
+/* ============================================================
+   МОБИЛЬНЫЕ УЛУЧШЕНИЯ — ничего не загораживать, ничего не ломать
+   ============================================================ */
+@media (max-width: 720px) {
+  /* nav: тоньше отступы, лого крупнее, бургер по центру по высоте */
+  .landing .nav { padding: 14px 0; }
+  .landing .nav.solid { padding: 10px 0; }
+  .landing .brand .name { font-size: 16px; letter-spacing: .14em; }
+  .landing .brand .mark { width: 32px; height: 32px; font-size: 16px; }
+  .landing .nav-cta { gap: 10px; }
+
+  /* hero: меньше падингов, легче дышит, кнопки на всю ширину */
+  .landing .hero .wrap { padding-top: 90px; padding-bottom: 50px; }
+  .landing .hero h1 { font-size: clamp(46px, 13vw, 84px); }
+  .landing .hero .lead { font-size: 15px; margin-top: 22px; }
+  .landing .hero-actions { gap: 10px; margin-top: 28px; flex-direction: column; align-items: stretch; }
+  .landing .hero-actions .btn { width: 100%; }
+  .landing .hero-meta { left: var(--pad); right: var(--pad); bottom: 22px; flex-direction: column; align-items: flex-start; gap: 14px; }
+  .landing .hero-meta .stats { gap: 22px; flex-wrap: wrap; }
+  .landing .hero-meta .stat .n { font-size: 26px; }
+
+  /* eyebrow — ужать дефис, чтобы не ломал слово */
+  .landing .eyebrow { font-size: 10.5px; letter-spacing: .32em; gap: 10px; }
+  .landing .eyebrow::before { width: 24px; }
+
+  /* sections общий padding */
+  .landing .section-pad { padding-block: 64px; }
+  .landing h2.title { font-size: clamp(32px, 8vw, 52px); }
+
+  /* about: визуал ужать; badge-float подвинуть и уменьшить */
+  .landing .about .visual .tall { height: 240px; }
+  .landing .about .visual .row .slot { height: 130px; }
+  .landing .badge-float { right: 0; left: auto; bottom: 14px; padding: 12px 16px; }
+  .landing .badge-float .n { font-size: 22px; }
+  .landing .badge-float .t { font-size: 9.5px; }
+
+  /* hookah cards: компактнее */
+  .landing .tabs { gap: 6px; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+  .landing .tabs::-webkit-scrollbar { display: none; }
+  .landing .tab { padding: 9px 16px; font-size: 11px; flex-shrink: 0; }
+  .landing .card { padding: 22px 20px; }
+  .landing .card h3 { font-size: 22px; }
+  .landing .card .price { font-size: 21px; }
+  .landing .card .idx { font-size: 46px; top: 14px; right: 18px; }
+
+  /* bar list: имена могут быть длинные, ds на свою строку без обрезки */
+  .landing .item { flex-wrap: wrap; gap: 10px; padding: 14px 0; }
+  .landing .item .nm { white-space: normal; font-size: 19px; flex: 1; min-width: 0; }
+  .landing .item .dots { display: none; }
+  .landing .item .ds { width: 100%; margin-top: 2px; max-width: 100%; }
+
+  /* events: меньше min-height и компактнее */
+  .landing .ev { min-height: 280px; }
+  .landing .ev .body { padding: 22px 20px; }
+  .landing .ev h3 { font-size: 24px; }
+
+  /* reviews */
+  .landing .review { padding: 26px 22px; }
+  .landing .review blockquote { font-size: 18px; margin: 14px 0 22px; }
+
+  /* booking — главный фикс */
+  .landing .form { padding: 22px 18px; border-radius: 4px; }
+  .landing .field { margin-bottom: 14px; }
+  .landing .field label { font-size: 10.5px; margin-bottom: 7px; }
+  .landing .field input, .landing .field select, .landing .field textarea {
+    padding: 14px 14px; font-size: 16px; /* 16px → iOS не зумит на focus */
+    border-radius: 4px;
+    min-height: 48px;
+  }
+  .landing .form .row { gap: 12px; }
+  .landing .guests { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .landing .guests button { padding: 14px 0; min-height: 48px; font-size: 15px; }
+  .landing .form .btn { padding: 16px 24px; font-size: 12.5px; }
+  .landing .book .copy h2 { font-size: clamp(30px, 7vw, 44px); }
+  .landing .book .hours .h { font-size: 13px; padding-bottom: 8px; }
+  .landing .book .hours .h span:last-child { font-size: 15px; }
+
+  /* contacts: карта пониже, кнопка «Открыть» больше */
+  .landing .map { min-height: 280px; }
+  .landing .map-open { right: 10px; bottom: 10px; padding: 9px 14px; font-size: 11px; }
+  .landing .cinfo .v { font-size: 22px; word-break: break-word; }
+  .landing .cinfo .s { font-size: 13px; }
+  .landing .socials a { width: 44px; height: 44px; }
+
+  /* footer: всё в одну колонку */
+  .landing .footer { padding: 50px 0 28px; }
+  .landing .footer .top { gap: 28px; padding-bottom: 32px; }
+  .landing .fcols { gap: 28px; }
+  .landing .footer .bot { font-size: 11.5px; gap: 10px; flex-direction: column; align-items: flex-start; }
+  .landing .footer .brand .name { font-size: 22px; }
+}
+
+/* очень узкие экраны (iPhone SE и т.п.) */
+@media (max-width: 380px) {
+  .landing .hero h1 { font-size: clamp(40px, 12vw, 72px); }
+  .landing .hero-meta .stats { gap: 16px; }
+  .landing .hero-meta .stat .n { font-size: 22px; }
+  .landing .card { padding: 20px 18px; }
+  .landing .card h3 { font-size: 20px; }
+  .landing .form { padding: 18px 14px; }
+  .landing .guests { grid-template-columns: 1fr 1fr; }
 }

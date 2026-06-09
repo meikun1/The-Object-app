@@ -244,6 +244,11 @@ export default function Page() {
             <Review name="Марина" role="гость" text="Приходим компанией каждую пятницу. Тихо, красиво, коктейли на уровне хорошего бара. Кухня — отдельная любовь." delay={2} />
             <Review name="Дмитрий" role="отмечал ДР" text="Бронировали ложу на день рождения — всё на пять. Свет, музыка, дым. Гости до сих пор вспоминают." delay={3} />
           </div>
+          <div className="reviews-more" data-reveal data-delay="3">
+            <a className="btn ghost" href="https://yandex.ru/maps/org/obyekt/58828646557/reviews/" target="_blank" rel="noopener">
+              <span>Все отзывы на Яндекс.Картах</span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -299,14 +304,15 @@ export default function Page() {
               </div>
             </div>
             <div className="map" data-reveal data-delay="2">
-              <div className="road" style={{ left: 0, right: 0, top: '32%', height: 2 }} />
-              <div className="road" style={{ left: 0, right: 0, top: '68%', height: 2 }} />
-              <div className="road" style={{ top: 0, bottom: 0, left: '40%', width: 2 }} />
-              <div className="road" style={{ top: 0, bottom: 0, left: '74%', width: 2 }} />
-              <div className="pin">
-                <div className="dot" />
-                <div className="lbl">The Object</div>
-              </div>
+              <iframe
+                src="https://yandex.ru/map-widget/v1/?ll=&z=17&pt=&text=%D1%83%D0%BB.%20%D0%90%D0%B4%D0%BC%D0%B8%D1%80%D0%B0%D0%BB%D1%8C%D1%81%D0%BA%D0%BE%D0%B3%D0%BE%2037%D0%B0&l=map"
+                title="Карта · ул. Адмиральского, 37а"
+                loading="lazy"
+                allow="geolocation"
+              />
+              <a className="map-open" href="https://yandex.ru/maps/org/obyekt/58828646557/" target="_blank" rel="noopener">
+                Открыть в Яндекс.Картах ↗
+              </a>
             </div>
           </div>
         </div>

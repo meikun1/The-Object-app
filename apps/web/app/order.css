@@ -424,9 +424,107 @@ body.order-locked { overflow: hidden; }
 @media (min-width: 1025px) {
   .order .mcart, .order .sheet { display: none !important; }
 }
-@media (max-width: 600px) {
-  .order .ogrid { grid-template-columns: 1fr; }
-  .order .opts { gap: 6px; }
-  .order .builder .bfoot { flex-direction: column; align-items: stretch; }
-  .order .builder .badd { max-width: none; }
+
+/* ============================================================
+   МОБИЛЬНЫЕ УЛУЧШЕНИЯ
+   ============================================================ */
+@media (max-width: 720px) {
+  /* intro: компактнее, ничего не выходит за края */
+  .order .order-page { padding-top: 12px; }
+  .order .qr-brand { padding: 4px 0; }
+  .order .qr-brand .mark { width: 34px; height: 34px; font-size: 17px; }
+  .order .qr-brand .name { font-size: 19px; letter-spacing: .14em; }
+  .order .order-intro { padding-block: 16px 8px; }
+  .order .order-intro h1 { font-size: clamp(28px, 8.5vw, 44px); }
+  .order .order-intro p { font-size: 14.5px; margin-top: 12px; }
+  .order .order-you { margin-top: 14px; }
+
+  /* sticky cat-nav: всегда лента со скроллом, не съезжает в две строки */
+  .order .cat-nav { padding: 10px 0; gap: 6px; margin-bottom: 6px; flex-wrap: nowrap; }
+  .order .cat-nav a { padding: 8px 14px; font-size: 11px; letter-spacing: .12em; }
+
+  /* история отправленных компактнее */
+  .order .ohistory { padding: 14px 16px; }
+  .order .oh-row { padding: 8px 0; }
+  .order .oh-items { font-size: 12.5px; }
+
+  /* раздел: уменьшить отступы и заголовок */
+  .order .osec { margin-bottom: 36px; }
+  .order .osec > .oh { gap: 10px; margin-bottom: 16px; }
+  .order .osec > .oh h2 { font-size: 24px; }
+  .order .osec > .oh .cnt { font-size: 10.5px; letter-spacing: .14em; }
+
+  /* конструктор: сделать padding меньше, не залезает на края */
+  .order .builder { padding: 18px 16px; border-radius: 6px; }
+  .order .builder .bhead { gap: 8px; margin-bottom: 14px; padding-bottom: 10px; flex-direction: column; align-items: flex-start; }
+  .order .builder .bhead h3 { font-size: 22px; }
+  .order .builder .bhead .bdesc { font-size: 12.5px; }
+  .order .builder .bstep { padding: 16px 0; }
+  .order .bstep .slabel { margin-bottom: 10px; }
+  .order .bstep .slabel h4 { font-size: 18px; }
+  .order .bstep .slabel .hint { font-size: 11px; flex-basis: 100%; margin: 4px 0 0 38px; order: 3; }
+  .order .opt { padding: 10px 14px; font-size: 13.5px; min-height: 42px; }
+  .order .opt.sel::after { width: 18px; height: 18px; font-size: 10px; top: -7px; right: -7px; }
+
+  /* flavors на узком: ровно 2 колонки */
+  .order .flavors { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .order .flavor { padding: 11px 12px; min-height: 56px; }
+  .order .flavor .fn { font-size: 15px; }
+  .order .flavor .ft { font-size: 10.5px; }
+  .order .flavor .fdot { width: 14px; height: 14px; top: 11px; right: 11px; }
+
+  /* bfoot — кнопка во всю ширину */
+  .order .builder .bfoot { flex-direction: column; align-items: stretch; gap: 14px; padding-top: 18px; }
+  .order .builder .badd { max-width: none; min-width: 0; }
+  .order .builder .bprice .val { font-size: 30px; }
+  .order .builder .bprice .val small { font-size: 16px; }
+
+  /* item cards 1 col */
+  .order .ogrid { grid-template-columns: 1fr; gap: 10px; }
+  .order .oitem { padding: 14px 16px; gap: 10px; }
+  .order .oitem h4 { font-size: 17px; gap: 8px; }
+  .order .oitem h4 .pr { font-size: 16px; }
+  .order .oitem p { font-size: 12.5px; margin-top: 4px; }
+  .order .addbtn { width: 38px; height: 38px; font-size: 20px; }
+
+  /* mobile cart bar — крупнее текст и кнопка, безопасный отступ */
+  .order .mcart { padding: 12px var(--pad); padding-bottom: max(12px, env(safe-area-inset-bottom)); gap: 12px; }
+  .order .mcart .minfo .mc { font-size: 10px; letter-spacing: .12em; }
+  .order .mcart .minfo .mv { font-size: 22px; }
+  .order .mcart .btn { padding: 12px 18px; font-size: 12px; letter-spacing: .18em; min-height: 44px; }
+
+  /* bottom sheet */
+  .order .sheet .panel { max-height: 88svh; }
+  .order .citems { max-height: none; }
+  .order .crow { padding: 11px 16px; gap: 10px; }
+  .order .cgroup { padding-left: 16px; padding-right: 16px; }
+  .order .cart .chead { padding: 16px 18px; }
+  .order .cart .cfoot { padding: 14px 18px 18px; }
+  .order .cart .ctotal .v { font-size: 26px; }
+
+  /* checkout modal */
+  .order .modal { padding: 12px; }
+  .order .modal .dialog { padding: 22px 18px; border-radius: 8px; }
+  .order .modal h2 { font-size: 26px; }
+  .order .modal .msub { font-size: 13px; }
+  .order .msum { padding: 12px 14px; font-size: 12.5px; }
+  .order .field input, .order .field textarea {
+    padding: 13px 14px; font-size: 16px; /* iOS no-zoom */
+    min-height: 48px;
+  }
+  .order .modal .btn { min-height: 50px; }
+
+  /* блок "Уже отправлено" — для длинного состава */
+  .order .oh-head { gap: 8px; }
+  .order .oh-total { margin-left: auto; }
+
+  /* запрет горизонтального скролла */
+  .order { overflow-x: hidden; }
+}
+
+@media (max-width: 380px) {
+  .order .builder { padding: 14px 12px; }
+  .order .ogrid { gap: 8px; }
+  .order .oitem { padding: 12px 14px; }
+  .order .order-intro h1 { font-size: clamp(24px, 8vw, 36px); }
 }

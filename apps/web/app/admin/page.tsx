@@ -202,6 +202,8 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
       <TelegramSection token={token} />
 
+      <StatsSection token={token} />
+
       <RkeeperSection token={token} />
 
       <StaffSection items={staff} />
@@ -285,6 +287,102 @@ function TelegramSection({ token }: { token: string }) {
       </div>
       {msg && <p className={`adm__msg ${msg.ok ? 'adm__msg--ok' : 'adm__msg--err'}`}>{msg.text}</p>}
     </section>
+  );
+}
+
+/* ===== статистика + экспорт ===== */
+type StatsPayload = {
+  summary: { sinceISO: string; totalAccepted: number; totalRevenue: number; totalRejected: number; totalItems: number };
+  days: { date: string; count: number; total: number; items: number; rejected: number }[];
+  weeks: { weekStart: string; count: number; total: number; items: number; rejected: number }[];
+};
+function StatsSection({ token }: { token: string }) {
+  const [data, setData] = useState<StatsPayload | null>(null);
+  const [mode, setMode] = useState<'days' | 'weeks'>('days');
+  const [err, setErr] = useState<string | null>(null);
+  const [days, setDays] = useState(30);
+
+  useEffect(() => {
+    fetch('/api/admin/stats', { headers: { 'x-admin-token': token } })
+      .then((r) => r.json())
+      .then((j) => { if (j.error) setErr(j.error); else setData(j); })
+      .catch((e) => setErr(String(e?.message ?? e)));
+  }, [token]);
+
+  const exportCsv = async () => {
+    const r = await fetch(`/api/admin/export?days=${days}`, { headers: { 'x-admin-token': token } });
+    if (!r.ok) { alert('Не удалось скачать экспорт.'); return; }
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `orders_${days}d.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
+  const fmt = (n: number) => Number(n).toLocaleString('ru-RU');
+  const rows = mode === 'days' ? data?.days ?? [] : data?.weeks ?? [];
+  const rowsRev = [...rows].reverse(); // самые свежие сверху
+
+  return (
+    <section className="adm__card">
+      <h2 className="adm__h2">Статистика · 30 дней</h2>
+      {err && <p className="adm__msg adm__msg--err">{err}</p>}
+      {!data && !err && <p className="adm__note">Считаем…</p>}
+      {data && (
+        <>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
+            <Tile label="Принято" value={fmt(data.summary.totalAccepted)} />
+            <Tile label="Выручка" value={fmt(data.summary.totalRevenue) + ' ₽'} />
+            <Tile label="Позиций" value={fmt(data.summary.totalItems)} />
+            <Tile label="Отклонено" value={fmt(data.summary.totalRejected)} />
+          </div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+            <button className={`adm__tab${mode === 'days' ? ' adm__tab--on' : ''}`} onClick={() => setMode('days')}>По дням</button>
+            <button className={`adm__tab${mode === 'weeks' ? ' adm__tab--on' : ''}`} onClick={() => setMode('weeks')}>По неделям</button>
+          </div>
+          {rowsRev.length === 0 ? (
+            <p className="adm__note">За последние 30 дней заказов нет.</p>
+          ) : (
+            <div className="stats-rows">
+              {rowsRev.map((r) => (
+                <div className="stats-row" key={(r as any).date ?? (r as any).weekStart}>
+                  <span className="stats-row__d">{(r as any).date ?? `Нед. с ${(r as any).weekStart}`}</span>
+                  <span className="stats-row__n">{r.count}</span>
+                  <span className="stats-row__t">{fmt(r.total)} ₽</span>
+                  {r.rejected > 0 && <span className="stats-row__r">−{r.rejected}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 10, marginTop: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ fontSize: 13, color: 'var(--dim)' }}>
+              За последние{' '}
+              <input
+                type="number" min={1} max={365} value={days}
+                onChange={(e) => setDays(Math.max(1, Math.min(365, Number(e.target.value) || 30)))}
+                style={{ width: 60, padding: '6px 8px', background: 'transparent',
+                  border: '1px solid var(--line)', color: 'var(--ink)', borderRadius: 2 }}
+              />{' '}дней
+            </label>
+            <button className="adm__btn" onClick={exportCsv}>Скачать CSV / Excel</button>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function Tile({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{
+      flex: '1 1 140px', minWidth: 130,
+      border: '1px solid var(--line)', background: 'var(--void-2)',
+      padding: '12px 14px',
+    }}>
+      <div style={{ fontFamily: 'var(--m)', fontSize: '.62rem', letter: '.16em', textTransform: 'uppercase', color: 'var(--faint)' }}>{label}</div>
+      <div style={{ fontFamily: 'var(--d)', fontSize: '1.5rem', marginTop: 4, color: 'var(--ink)' }}>{value}</div>
+    </div>
   );
 }
 
@@ -579,7 +677,12 @@ function QrModal({ table, token, onClose }: { table: TableRow; token: string; on
         <button className="qrmodal__close" onClick={onClose} aria-label="Закрыть">✕</button>
         <h3 className="qrmodal__title">{table.label}</h3>
         {err && <p className="adm__msg adm__msg--err">{err}</p>}
-        {png && <img className="qrmodal__img" src={png} alt={`QR-код для ${table.label}`} />}
+        {png && (
+          <div className="qrmodal__qr">
+            <img className="qrmodal__img" src={png} alt={`QR-код для ${table.label}`} />
+            <img className="qrmodal__logo" src="/img/object-logo.svg" alt="THE OBJECT" />
+          </div>
+        )}
         {url && (
           <p className="qrmodal__url">
             <a href={url} target="_blank" rel="noopener">{url}</a>

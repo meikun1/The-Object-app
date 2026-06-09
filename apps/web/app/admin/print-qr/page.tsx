@@ -93,13 +93,16 @@ export default function PrintQrPage() {
           const q = qrs[t.id];
           return (
             <article className="qrcard" key={t.id}>
+              <div className="qrcard__hairline" />
               <div className="qrcard__brand">
-                <span className="qrcard__mark">O</span>
-                <span className="qrcard__name">THE&nbsp;OBJECT</span>
+                <img className="qrcard__logoTop" src="/img/object-logo.svg" alt="THE OBJECT" />
               </div>
               <p className="qrcard__hint">Отсканируйте, чтобы собрать заказ</p>
               {q ? (
-                <img className="qrcard__qr" src={q.png} alt={`QR — ${t.label}`} />
+                <div className="qrcard__qrwrap">
+                  <img className="qrcard__qr" src={q.png} alt={`QR — ${t.label}`} />
+                  <img className="qrcard__logoMid" src="/img/object-logo.svg" alt="" aria-hidden="true" />
+                </div>
               ) : (
                 <div className="qrcard__qr qrcard__qr--loading">…</div>
               )}
@@ -108,6 +111,7 @@ export default function PrintQrPage() {
                 {t.kind === 'VIP' && <span className="qrcard__vip">VIP</span>}
               </div>
               <p className="qrcard__leg">Меню за столом · оплата у бармена</p>
+              <div className="qrcard__hairline qrcard__hairline--b" />
             </article>
           );
         })}

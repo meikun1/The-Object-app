@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset=".16" stop-color="#d6d4d0" />
+      <stop offset=".44" stop-color="#7f8086" />
+      <stop offset=".5" stop-color="#fbfbfb" />
+      <stop offset=".6" stop-color="#65666c" />
+      <stop offset=".84" stop-color="#c2c2c6" />
+      <stop offset="1" stop-color="#ededf0" />
+    </linearGradient>
+  </defs>
+  <!-- овальный контур -->
+  <ellipse cx="200" cy="100" rx="180" ry="62" fill="none" stroke="url(#chrome)" stroke-width="1.6" />
+  <!-- THE OBJECT -->
+  <text x="200" y="118" font-family="'Cormorant Garamond', 'Times New Roman', serif"
+        font-size="56" font-weight="500" letter-spacing="6"
+        text-anchor="middle" fill="url(#chrome)">THE OBJECT</text>
+</svg>

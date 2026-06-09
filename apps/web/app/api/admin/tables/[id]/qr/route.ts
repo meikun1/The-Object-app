@@ -25,12 +25,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     || `https://${req.headers.get('host')}`;
   const url = `${base.replace(/\/$/, '')}/t/${token}`;
 
-  // PNG, тёмный на белом — чтобы Telegram/принтер не уронили контраст.
+  // PNG, фирменная тёплая палитра: глубокий warm-black на кремовом фоне.
+  // errorCorrectionLevel:'H' даёт ~30% запаса под повреждение → центр можно
+  // безопасно перекрыть логотипом, телефоны всё равно прочитают.
   const png = await QRCode.toDataURL(url, {
-    errorCorrectionLevel: 'M',
+    errorCorrectionLevel: 'H',
     margin: 2,
-    width: 512,
-    color: { dark: '#0a0908', light: '#ffffff' },
+    width: 720,
+    color: { dark: '#15110c', light: '#f1e9da' },
   });
 
   return NextResponse.json({ url, png });

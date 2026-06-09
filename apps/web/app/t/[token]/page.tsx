@@ -23,15 +23,19 @@ export default async function GuestPage({ params }: Props) {
 
   if (!table) {
     return (
-      <main className="wrap">
-        <p className="eyebrow">THE OBJECT</p>
-        <h1>Ссылка недействительна</h1>
-        <p style={{ color: 'var(--dim)' }}>
-          QR-код устарел или ссылка неверная. Попросите бармена показать
-          актуальный QR-код вашего стола.
-        </p>
-        <div className="card">
-          <a href="/" style={{ color: 'var(--blood)' }}>← На главную</a>
+      <main className="order">
+        <div className="invalid-page">
+          <div>
+            <div className="qr-brand" style={{ marginBottom: 32 }}>
+              <span className="mark">O</span>
+              <span className="name">The&nbsp;<b>Object</b></span>
+            </div>
+            <h1>Ссылка недействительна</h1>
+            <p>
+              QR-код устарел или ссылка неверная. Попросите бармена показать
+              актуальный QR-код вашего стола.
+            </p>
+          </div>
         </div>
       </main>
     );

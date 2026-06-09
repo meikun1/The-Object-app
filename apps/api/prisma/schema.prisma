@@ -1,0 +1,226 @@
+// THE OBJECT — модель данных бар-конструктора.
+// БД: PostgreSQL. Деньги — Decimal(10,2). Идентификаторы — cuid.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ======================= СТОЛЫ И СЕССИИ =======================
+
+enum TableKind {
+  HALL // обычный стол в зале
+  VIP  // VIP-комната
+}
+
+model Table {
+  id        String         @id @default(cuid())
+  label     String         // «Стол 1», «VIP 1»
+  kind      TableKind      @default(HALL)
+  // Секрет конкретного стола: входит в подпись QR-ссылки (Этап 3).
+  qrSecret  String         @default(cuid())
+  active    Boolean        @default(true)
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+  sessions  TableSession[]
+}
+
+enum SessionStatus {
+  OPEN
+  CLOSED
+}
+
+// «Открытая сессия» стола: к ней привязаны гости, корзина и заказы.
+// Сброс = закрытие сессии + ротация serverToken (Этап 3).
+model TableSession {
+  id             String        @id @default(cuid())
+  table          Table         @relation(fields: [tableId], references: [id])
+  tableId        String
+  status         SessionStatus @default(OPEN)
+  // Одноразовый серверный токен текущей сессии (в cookie гостя).
+  serverToken    String        @unique @default(cuid())
+  openedAt       DateTime      @default(now())
+  lastActivityAt DateTime      @default(now())
+  closedAt       DateTime?
+  // Резервный таймаут неактивности (Этап 3).
+  expiresAt      DateTime?
+  guests         Guest[]
+  cartItems      CartItem[]
+  orders         Order[]
+
+  @@index([tableId, status])
+}
+
+// Гость за столом — без регистрации, только имя.
+model Guest {
+  id        String       @id @default(cuid())
+  session   TableSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  name      String
+  createdAt DateTime     @default(now())
+  cartItems CartItem[]
+
+  @@index([sessionId])
+}
+
+// ======================= КОНСТРУКТОР (МЕНЮ) =======================
+
+// Основа напитка («Джин-тоник», «Лимонад», «Кофе»).
+model Base {
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  price         Decimal        @db.Decimal(10, 2)
+  available     Boolean        @default(true) // стоп-лист
+  sortOrder     Int            @default(0)
+  // Маппинг на номенклатуру r_keeper (Этап 7).
+  rkeeperGoodId String?
+  createdAt     DateTime       @default(now())
+  groups        ModifierGroup[]
+  cartItems     CartItem[]
+}
+
+// Группа модификаторов с правилами выбора.
+model ModifierGroup {
+  id        String     @id @default(cuid())
+  base      Base       @relation(fields: [baseId], references: [id], onDelete: Cascade)
+  baseId    String
+  name      String     // «Крепость», «Цитрус», «Лёд»
+  required  Boolean    @default(false)
+  minSelect Int        @default(0)
+  maxSelect Int        @default(1)
+  sortOrder Int        @default(0)
+  modifiers Modifier[]
+
+  @@index([baseId])
+}
+
+// Конкретный модификатор внутри группы.
+model Modifier {
+  id            String        @id @default(cuid())
+  group         ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId       String
+  name          String        // «Двойной», «Лайм», «Без льда»
+  priceDelta    Decimal       @default(0) @db.Decimal(10, 2)
+  available     Boolean       @default(true)
+  sortOrder     Int           @default(0)
+  rkeeperModId  String?
+  cartSelections CartItemModifier[]
+
+  @@index([groupId])
+}
+
+// ======================= КОРЗИНА =======================
+
+// Позиция в общей корзине стола, с атрибуцией к гостю.
+model CartItem {
+  id         String             @id @default(cuid())
+  session    TableSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId  String
+  guest      Guest              @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  guestId    String
+  base       Base               @relation(fields: [baseId], references: [id])
+  baseId     String
+  qty        Int                @default(1)
+  // Снимок цены на момент добавления (основа + сумма модификаторов).
+  unitPrice  Decimal            @db.Decimal(10, 2)
+  createdAt  DateTime           @default(now())
+  modifiers  CartItemModifier[]
+
+  @@index([sessionId])
+  @@index([guestId])
+}
+
+model CartItemModifier {
+  id         String   @id @default(cuid())
+  cartItem   CartItem @relation(fields: [cartItemId], references: [id], onDelete: Cascade)
+  cartItemId String
+  modifier   Modifier @relation(fields: [modifierId], references: [id])
+  modifierId String
+  // Снимки на момент добавления (чтобы цена не «уехала» при правках меню).
+  nameSnapshot  String
+  priceSnapshot Decimal @db.Decimal(10, 2)
+
+  @@index([cartItemId])
+}
+
+// ======================= ЗАКАЗЫ =======================
+
+enum OrderStatus {
+  PENDING   // ждёт подтверждения бармена
+  ACCEPTED  // принят/готовится
+  READY     // готов
+  REJECTED  // отклонён
+}
+
+// Заказ = снимок корзины на момент отправки. После отправки гость не правит.
+model Order {
+  id           String       @id @default(cuid())
+  session      TableSession @relation(fields: [sessionId], references: [id])
+  sessionId    String
+  status       OrderStatus  @default(PENDING)
+  total        Decimal      @db.Decimal(10, 2)
+  createdAt    DateTime     @default(now())
+  confirmedAt  DateTime?
+  confirmedBy  Staff?       @relation(fields: [confirmedById], references: [id])
+  confirmedById String?
+  // ID заказа в r_keeper после успешного создания (Этап 7). Пока от мока.
+  rkeeperOrderId String?
+  items        OrderItem[]
+
+  @@index([sessionId, status])
+}
+
+// Позиция заказа — полностью денормализованный снимок (имя гостя, состав, цена).
+model OrderItem {
+  id         String  @id @default(cuid())
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String
+  guestName  String  // кто заказал (для разделения счёта)
+  baseName   String
+  // Человекочитаемый состав: «Джин-тоник, Двойной, Лайм, Без льда».
+  summary    String
+  // Машиночитаемый снимок выбранных модификаторов.
+  detail     Json
+  qty        Int
+  unitPrice  Decimal @db.Decimal(10, 2)
+  lineTotal  Decimal @db.Decimal(10, 2)
+
+  @@index([orderId])
+}
+
+// ======================= СОТРУДНИКИ / БОТ =======================
+
+enum StaffRole {
+  ADMIN
+  BARMAN
+}
+
+model Staff {
+  id          String      @id @default(cuid())
+  name        String
+  role        StaffRole   @default(BARMAN)
+  // Привязка к Telegram (заполняется при /login в боте — Этап 4).
+  tgUserId    BigInt?     @unique
+  chatId      BigInt?
+  authorized  Boolean     @default(false)
+  onShift     Boolean     @default(false)
+  lastLoginAt DateTime?
+  createdAt   DateTime    @default(now())
+  orders      Order[]
+}
+
+// Лёгкий аудит ключевых действий (сброс стола, подтверждение заказа и т.п.).
+model AuditLog {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+}

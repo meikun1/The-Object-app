@@ -55,7 +55,7 @@ export default function Page() {
         <Smoke />
         <div className="wrap">
           <div className="hero-inner">
-            <span className="eyebrow">Лаундж-бар · кальянная · с 18:00 до 06:00</span>
+            <span className="eyebrow">Лаундж-бар · с 12:00 до 03:00</span>
             <h1>
               <span className="l"><span>Дым,</span></span>
               <span className="l"><span>вкус&nbsp;&amp; тишина</span></span>
@@ -71,7 +71,7 @@ export default function Page() {
           <div className="stats">
             <div className="stat"><div className="n">40+</div><div className="t">Сортов табака</div></div>
             <div className="stat"><div className="n">7</div><div className="t">Лет ритуала</div></div>
-            <div className="stat"><div className="n">06:00</div><div className="t">Закрываем</div></div>
+            <div className="stat"><div className="n">03:00</div><div className="t">Закрываем</div></div>
           </div>
           <div className="scroll-hint"><span className="ln" /> Листайте вниз</div>
         </div>
@@ -256,9 +256,8 @@ export default function Page() {
             <h2 className="title" data-reveal data-delay="1">Займите свой <em>стол</em></h2>
             <p className="lead" data-reveal data-delay="2">Забронируйте место заранее — в выходные залы заполняются к девяти вечера. Мы перезвоним для подтверждения.</p>
             <div className="hours" data-reveal data-delay="2">
-              <div className="h"><span>Понедельник — Четверг</span><span>18:00 — 03:00</span></div>
-              <div className="h"><span>Пятница — Суббота</span><span>18:00 — 06:00</span></div>
-              <div className="h"><span>Воскресенье</span><span>18:00 — 02:00</span></div>
+              <div className="h"><span>Воскресенье — Четверг</span><span>12:00 — 02:00</span></div>
+              <div className="h"><span>Пятница — Суббота</span><span>12:00 — 03:00</span></div>
             </div>
           </div>
           <BookingForm />
@@ -278,20 +277,23 @@ export default function Page() {
             <div className="info">
               <div className="cinfo" data-reveal data-delay="1">
                 <div className="k">Адрес</div>
-                <div className="v">ул. Большая Дмитровка, 12</div>
-                <div className="s">Вход со двора, под вывеской «O» · Москва</div>
+                <div className="v">
+                  <a href="https://yandex.ru/maps/?text=Адмиральского%2037а" target="_blank" rel="noopener">
+                    ул. Адмиральского, 37а
+                  </a>
+                </div>
+                <div className="s">Вход со двора · под вывеской «O»</div>
               </div>
               <div className="cinfo" data-reveal data-delay="2">
                 <div className="k">Телефон</div>
-                <div className="v"><a href="tel:+74951234567">+7 (495) 123-45-67</a></div>
-                <div className="s">Звонок и бронь · ежедневно с 16:00</div>
+                <div className="v"><a href="tel:+79003333026">+7 (900) 333-30-26</a></div>
+                <div className="s">Звонок и бронь · ежедневно с 12:00</div>
               </div>
               <div className="cinfo" data-reveal data-delay="3">
                 <div className="k">Соцсети</div>
                 <div className="socials">
-                  <a href="#" aria-label="Telegram">TG</a>
                   <a href="#" aria-label="Instagram">IG</a>
-                  <a href="#" aria-label="VK">VK</a>
+                  <a href="#" aria-label="Telegram">TG</a>
                   <a href="#" aria-label="WhatsApp">WA</a>
                 </div>
               </div>
@@ -331,15 +333,14 @@ export default function Page() {
               </div>
               <div className="fcol">
                 <h5>Контакты</h5>
-                <a href="tel:+74951234567">+7 (495) 123-45-67</a>
-                <p>Большая Дмитровка, 12</p>
+                <a href="tel:+79003333026">+7 (900) 333-30-26</a>
+                <p>Адмиральского, 37а</p>
                 <a href="#book">Забронировать</a>
               </div>
               <div className="fcol">
                 <h5>Часы</h5>
-                <p>Пн–Чт · 18:00–03:00</p>
-                <p>Пт–Сб · 18:00–06:00</p>
-                <p>Вс · 18:00–02:00</p>
+                <p>Вс–Чт · 12:00–02:00</p>
+                <p>Пт–Сб · 12:00–03:00</p>
               </div>
             </div>
           </div>

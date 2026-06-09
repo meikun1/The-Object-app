@@ -30,7 +30,7 @@ export default function BookingForm() {
       if (!res.ok) throw new Error(String(res.status));
       setDone(true);
     } catch {
-      setErr('Не удалось отправить. Позвоните: +7 (495) 123-45-67');
+      setErr('Не удалось отправить. Позвоните: +7 (900) 333-30-26');
     } finally { setBusy(false); }
   };
 

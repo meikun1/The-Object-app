@@ -54,17 +54,22 @@
 body.landing-open { overflow: hidden; }
 
 /* texture overlay for depth */
+/* Фоновое свечение — встраиваем в .landing как absolute (без fixed и mix-blend-mode).
+   На iOS Safari фиксированный mix-blend-mode иногда дублирует элементы на странице. */
 .landing::before{
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background:
     radial-gradient(120% 80% at 50% -10%, var(--tint), transparent 60%),
     radial-gradient(80% 60% at 100% 110%, var(--tint), transparent 70%);
-  mix-blend-mode: screen; opacity: .9;
+  opacity: .6;
 }
 
 /* ---------- layout ---------- */
 .landing .wrap { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--pad); }
-.landing section { position: relative; z-index: 2; isolation: isolate; }
+.landing section {
+  position: relative; z-index: 2;
+  contain: layout paint;   /* iOS Safari иногда дублирует содержимое разных секций — contain их фиксирует в своих границах */
+}
 .landing .section-pad { padding-block: calc(120px * var(--space)); }
 
 .landing .eyebrow {
@@ -163,11 +168,15 @@ body.landing-open .landing .burger i:nth-child(3) { top: 20px; transform: rotate
 
 .landing .nav-mobile {
   position: fixed; inset: 0; z-index: 39; background: var(--bg);
-  padding: 110px var(--pad) 40px; transform: translateX(100%);
-  transition: transform .6s cubic-bezier(.16, 1, .3, 1);
+  padding: 110px var(--pad) 40px;
+  transform: translateX(100%); visibility: hidden;
+  transition: transform .6s cubic-bezier(.16, 1, .3, 1), visibility 0s .6s;
   display: flex; flex-direction: column; gap: 6px;
 }
-body.landing-open .landing .nav-mobile { transform: translateX(0); }
+body.landing-open .landing .nav-mobile {
+  transform: translateX(0); visibility: visible;
+  transition: transform .6s cubic-bezier(.16, 1, .3, 1), visibility 0s 0s;
+}
 .landing .nav-mobile a {
   font-family: var(--display); font-size: 32px; color: var(--ink); padding: 14px 0;
   border-bottom: 1px solid var(--line-soft);
@@ -242,10 +251,10 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
 
 /* ---------- reveal utility ---------- */
 .landing [data-reveal] {
-  opacity: 0; transform: translateY(34px);
-  transition: opacity 1s cubic-bezier(.16, 1, .3, 1), transform 1s cubic-bezier(.16, 1, .3, 1);
+  opacity: 0;
+  transition: opacity .8s cubic-bezier(.16, 1, .3, 1);
 }
-.landing [data-reveal].in { opacity: 1; transform: none; }
+.landing [data-reveal].in { opacity: 1; }
 .landing [data-reveal][data-delay="1"] { transition-delay: .1s; }
 .landing [data-reveal][data-delay="2"] { transition-delay: .2s; }
 .landing [data-reveal][data-delay="3"] { transition-delay: .3s; }

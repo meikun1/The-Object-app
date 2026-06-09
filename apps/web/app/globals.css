@@ -387,7 +387,7 @@ a.cr__v:hover { color: var(--blood); }
 .ctr__you { margin-top: 14px; font-family: var(--m); font-size: .78rem; color: var(--dim); }
 .ctr__you b { color: var(--ink); }
 .ctr__chname { background: none; border: none; color: var(--blood); cursor: pointer; font-family: var(--m); font-size: .76rem; text-decoration: underline; padding: 0; margin-left: 8px; }
-.ctr__pad { height: 110px; }
+.ctr__pad { height: 140px; }
 
 /* история отправленных заказов */
 .oh { border: 1px solid var(--line); background: var(--void-2); padding: clamp(18px, 2.4vw, 28px); margin: 8px 0 30px; }
@@ -429,31 +429,92 @@ a.cr__v:hover { color: var(--blood); }
 .ctr__send { width: 100%; }
 .ctr__err { margin: 8px 0; font-family: var(--m); font-size: .8rem; color: var(--blood); text-align: center; }
 
-/* модалка выбора модификаторов */
+/* модалка выбора модификаторов: bottom-sheet с фикс. шапкой и футером */
 .pmodal { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.65); backdrop-filter: blur(6px); display: grid; place-items: end center; padding: 0; }
-.pmodal__inner { position: relative; width: 100%; max-width: 640px; background: var(--void-2); border: 1px solid var(--line); border-bottom: none; padding: clamp(28px, 3.5vw, 44px); max-height: 90vh; overflow-y: auto; animation: pslide .35s var(--ease); }
+.pmodal__inner {
+  position: relative; width: 100%; max-width: 640px;
+  background: var(--void-2); border: 1px solid var(--line); border-bottom: none;
+  display: flex; flex-direction: column;
+  max-height: 92svh; min-height: 50svh;
+  animation: pslide .35s var(--ease);
+}
 @keyframes pslide { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
-.pmodal__close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--dim); font-size: 1.4rem; cursor: pointer; padding: 8px; }
-.pmodal__close:hover { color: var(--blood); }
-.pmodal__name { font-family: var(--d); font-weight: 400; font-size: clamp(1.7rem, 3vw, 2.4rem); margin: 0 0 6px; padding-right: 40px; }
-.pmodal__desc { color: var(--dim); margin: 0 0 26px; }
 
-.pgroup { margin-bottom: 24px; }
-.pgroup__name { font-family: var(--m); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--blood); margin-bottom: 12px; }
+.pmodal__head {
+  position: relative;
+  padding: clamp(20px, 3vw, 30px) clamp(20px, 3vw, 36px) 14px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.pmodal__close {
+  position: absolute; top: 12px; right: 12px;
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 50%;
+  color: var(--ink); font-size: 1rem; cursor: pointer; padding: 0;
+  display: grid; place-items: center;
+}
+.pmodal__close:hover { background: var(--blood); border-color: var(--blood); color: #fff; }
+.pmodal__name { font-family: var(--d); font-weight: 400; font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 0 0 6px; padding-right: 50px; line-height: 1.05; }
+.pmodal__desc { color: var(--dim); margin: 0; font-size: .92rem; padding-right: 50px; }
+
+.pmodal__body {
+  flex: 1 1 auto; overflow-y: auto;
+  padding: clamp(18px, 2.6vw, 26px) clamp(20px, 3vw, 36px);
+  -webkit-overflow-scrolling: touch;
+}
+
+.pstep { margin-bottom: 22px; }
+.pstep:last-child { margin-bottom: 0; }
+.pstep__head {
+  font-family: var(--d); font-weight: 400;
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+  color: var(--ink);
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.pstep__head::before {
+  content: ''; display: inline-block; width: 6px; height: 6px;
+  background: var(--blood); border-radius: 50%;
+  vertical-align: middle; margin-right: 10px; transform: translateY(-2px);
+}
+
+.pgroup { margin-bottom: 16px; }
+.pgroup:last-child { margin-bottom: 0; }
+.pgroup__name {
+  font-family: var(--m); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--blood); margin: 0 0 8px; font-weight: 500;
+}
 .pgroup__hint { color: var(--faint); }
-.pgroup__opts { display: flex; flex-wrap: wrap; gap: 8px; }
-.popt { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-family: var(--b); font-size: .92rem; cursor: pointer; border-radius: 2px; transition: border-color .25s, background .25s, color .25s; }
-.popt i { font-style: normal; font-family: var(--m); font-size: .76rem; color: var(--faint); }
+.pgroup__opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.popt {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--line); background: transparent;
+  color: var(--ink); font-family: var(--b); font-size: .88rem;
+  cursor: pointer; border-radius: 2px;
+  transition: border-color .2s, background .2s, color .2s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.popt i { font-style: normal; font-family: var(--m); font-size: .72rem; color: var(--faint); }
 .popt:hover { border-color: var(--ink); }
-.popt--on { border-color: var(--blood); background: rgba(192,31,51,.12); color: #fff; }
-.popt--on i { color: var(--ink); }
+.popt--on { border-color: var(--blood); background: rgba(192,31,51,.14); color: #fff; }
+.popt--on i { color: rgba(255,255,255,.78); }
 
-.pmodal__foot { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
-.pmodal__qty { display: flex; align-items: center; gap: 6px; }
+.pmodal__foot {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px clamp(20px, 3vw, 36px) max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--void-2);
+  flex-shrink: 0;
+}
+.pmodal__qty { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .pmodal__qty button { width: 36px; height: 36px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; border-radius: 2px; font-family: var(--m); font-size: 1rem; }
 .pmodal__qty button:hover { border-color: var(--blood); }
 .pmodal__qty span { min-width: 28px; text-align: center; font-family: var(--m); }
-.pmodal__foot .btn { flex: 1; }
+.pmodal__foot .btn { flex: 1; min-width: 0; }
 
 @media (max-width: 760px) {
   .ctr__bases { grid-template-columns: 1fr 1fr; }

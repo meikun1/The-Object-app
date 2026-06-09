@@ -246,6 +246,7 @@ export default function ConstructorClient({ tableId, token, tableLabel, bases }:
 
       {picking && (
         <Picker
+          key={picking.id}
           base={picking}
           onClose={() => setPicking(null)}
           onAdd={(sel, qty) => addToCart(picking, sel, qty)}
@@ -420,11 +421,29 @@ function CartRow({
 }
 
 /* =========================== модалка выбора =========================== */
-function Picker({
+// Парсим имя группы: «Шаг N · Subname» → { step: 'Шаг N', sub: 'Subname' }.
+// Без префикса — отдельный «шаг» с пустой подгруппой.
+function parseStep(name: string): { step: string; sub: string | null } {
+  const m = name.match(/^(Шаг\s+\d+)\s*[·:|-]\s*(.+)$/i);
+  if (m) return { step: m[1], sub: m[2] };
+  return { step: name, sub: null };
+}
+
+function groupGroupsByStep(groups: Group[]): { step: string; items: Group[] }[] {
+  const out: { step: string; items: Group[] }[] = [];
+  for (const g of groups) {
+    const { step } = parseStep(g.name);
+    const bucket = out[out.length - 1];
+    if (bucket && bucket.step === step) bucket.items.push(g);
+    else out.push({ step, items: [g] });
+  }
+  return out;
+}
+
+const Picker = function Picker({
   base, onClose, onAdd,
 }: { base: Base; onClose: () => void; onAdd: (sel: Record<string, string[]>, qty: number) => void }) {
-  // Дефолтные модификаторы — берём первые maxSelect из тех, что отмечены
-  // defaultSelected (так корректно для групп с maxSelect = 1).
+  // Дефолтные модификаторы — первые maxSelect из тех, что defaultSelected.
   const [selections, setSelections] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(base.groups.map((g) => [
       g.id,
@@ -433,13 +452,25 @@ function Picker({
   );
   const [qty, setQty] = useState(1);
 
+  // Блокируем скролл фона, пока модалка открыта.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   const toggle = (g: Group, modId: string) => {
     setSelections((s) => {
       const cur = s[g.id] ?? [];
       const has = cur.includes(modId);
       let next: string[];
-      if (has) next = cur.filter((x) => x !== modId);
-      else next = g.maxSelect <= 1 ? [modId] : [...cur, modId].slice(0, g.maxSelect);
+      if (g.maxSelect <= 1) {
+        // Радио-режим: тап на выбранный — не снимаем (это обязательный выбор).
+        next = has ? cur : [modId];
+      } else {
+        // Чекбокс-режим: повторный тап снимает; новый — добавляет, но не выше maxSelect.
+        next = has ? cur.filter((x) => x !== modId) : [...cur, modId].slice(0, g.maxSelect);
+      }
       return { ...s, [g.id]: next };
     });
   };
@@ -448,7 +479,8 @@ function Picker({
   for (const g of base.groups) {
     const sel = selections[g.id] ?? [];
     if (g.required && sel.length < Math.max(1, g.minSelect)) {
-      errors.push(`Выберите ${g.name}`);
+      const { sub } = parseStep(g.name);
+      errors.push(`Выберите: ${sub ?? g.name}`);
     }
   }
 
@@ -463,48 +495,64 @@ function Picker({
     return total;
   }, [base, selections]);
 
+  const steps = useMemo(() => groupGroupsByStep(base.groups), [base.groups]);
+
   return (
     <div className="pmodal" role="dialog" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="pmodal__inner">
-        <button className="pmodal__close" aria-label="Закрыть" onClick={onClose}>✕</button>
-        <h2 className="pmodal__name">{base.name}</h2>
-        {base.description && <p className="pmodal__desc">{base.description}</p>}
+        <header className="pmodal__head">
+          <h2 className="pmodal__name">{base.name}</h2>
+          {base.description && <p className="pmodal__desc">{base.description}</p>}
+          <button className="pmodal__close" aria-label="Закрыть" onClick={onClose}>✕</button>
+        </header>
 
-        {base.groups.map((g) => (
-          <div key={g.id} className="pgroup">
-            <h3 className="pgroup__name">
-              {g.name}
-              <span className="pgroup__hint">
-                {g.required ? ' · обязательно' : ''}
-                {g.maxSelect > 1 ? ` · до ${g.maxSelect}` : ''}
-              </span>
-            </h3>
-            <div className="pgroup__opts">
-              {g.modifiers.map((m) => {
-                const active = (selections[g.id] ?? []).includes(m.id);
-                const delta = Number(m.priceDelta);
+        <div className="pmodal__body">
+          {steps.map((s) => (
+            <section className="pstep" key={s.step}>
+              <h3 className="pstep__head">{s.step}</h3>
+              {s.items.map((g) => {
+                const { sub } = parseStep(g.name);
                 return (
-                  <button
-                    key={m.id}
-                    className={`popt${active ? ' popt--on' : ''}`}
-                    onClick={() => toggle(g, m.id)}
-                  >
-                    <span>{m.name}</span>
-                    {delta > 0 && <i>+{fmt(delta)} ₽</i>}
-                  </button>
+                  <div key={g.id} className="pgroup">
+                    <h4 className="pgroup__name">
+                      {sub ?? g.name}
+                      <span className="pgroup__hint">
+                        {g.required ? ' · обязательно' : ''}
+                        {g.maxSelect > 1 ? ` · до ${g.maxSelect}` : ''}
+                      </span>
+                    </h4>
+                    <div className="pgroup__opts">
+                      {g.modifiers.map((m) => {
+                        const active = (selections[g.id] ?? []).includes(m.id);
+                        const delta = Number(m.priceDelta);
+                        return (
+                          <button
+                            type="button"
+                            key={m.id}
+                            className={`popt${active ? ' popt--on' : ''}`}
+                            onClick={() => toggle(g, m.id)}
+                          >
+                            <span>{m.name}</span>
+                            {delta > 0 && <i>+{fmt(delta)} ₽</i>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
-            </div>
-          </div>
-        ))}
+            </section>
+          ))}
+        </div>
 
         <div className="pmodal__foot">
           <div className="pmodal__qty">
-            <button onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+            <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
             <span>{qty}</span>
-            <button onClick={() => setQty((q) => Math.min(99, q + 1))}>+</button>
+            <button type="button" onClick={() => setQty((q) => Math.min(99, q + 1))}>+</button>
           </div>
           <button
+            type="button"
             className="btn btn--solid"
             disabled={errors.length > 0}
             onClick={() => onAdd(selections, qty)}
@@ -515,4 +563,4 @@ function Picker({
       </div>
     </div>
   );
-}
+};

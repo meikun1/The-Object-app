@@ -10,10 +10,12 @@ import Gallery from '@/components/Gallery';
 import Contacts from '@/components/Contacts';
 import BookingForm from '@/components/BookingForm';
 import Footer from '@/components/Footer';
+import LandingClient from '@/components/LandingClient';
 
 export default function Page() {
   return (
     <>
+      <LandingClient />
       <Header />
       <Hero />
       <Marquee />

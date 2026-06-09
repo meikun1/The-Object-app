@@ -4,7 +4,8 @@
 import { useEffect, useState } from 'react';
 
 export type Modifier = {
-  id: string; name: string; priceDelta: string; available: boolean; sortOrder: number;
+  id: string; name: string; priceDelta: string;
+  defaultSelected: boolean; available: boolean; sortOrder: number;
 };
 export type Group = {
   id: string; name: string; required: boolean;
@@ -13,7 +14,8 @@ export type Group = {
 };
 export type Base = {
   id: string; name: string; description: string | null;
-  price: string; available: boolean; sortOrder: number;
+  price: string; category: string | null;
+  available: boolean; sortOrder: number;
   groups: Group[];
 };
 
@@ -119,6 +121,7 @@ export default function MenuEditor({ token }: { token: string }) {
                 onClick={() => setEdit({ kind: 'base', base: b })}
               >
                 <span>{b.name}</span>
+                {b.category && <em className="me__cat">{b.category}</em>}
                 <i>{Number(b.price).toLocaleString('ru-RU')} ₽</i>
               </button>
               <label className="me__avail" title="Есть в продаже">
@@ -151,6 +154,7 @@ export default function MenuEditor({ token }: { token: string }) {
                         <div key={m.id} className={`me__mod${m.available ? '' : ' me__mod--off'}`}>
                           <button className="me__mod-name" onClick={() => setEdit({ kind: 'mod', mod: m, groupId: g.id })}>
                             {m.name}
+                            {m.defaultSelected && <em className="me__default" title="Выбран по умолчанию">★</em>}
                             {Number(m.priceDelta) !== 0 && (
                               <i>{Number(m.priceDelta) > 0 ? '+' : ''}{Number(m.priceDelta).toLocaleString('ru-RU')} ₽</i>
                             )}
@@ -203,6 +207,7 @@ function BaseModal({
   const isNew = !base;
   const [name, setName] = useState(base?.name ?? '');
   const [description, setDescription] = useState(base?.description ?? '');
+  const [category, setCategory] = useState(base?.category ?? '');
   const [price, setPrice] = useState(base?.price ?? '');
   const [available, setAvailable] = useState<boolean>(base?.available ?? true);
   const [busy, setBusy] = useState(false);
@@ -213,8 +218,8 @@ function BaseModal({
     setBusy(true); setErr(null);
     try {
       const body = isNew
-        ? { name, description: description || undefined, price }
-        : { name, description, price, available };
+        ? { name, description: description || undefined, price, category: category || undefined }
+        : { name, description, price, category, available };
       const r = await fetch(isNew ? '/api/admin/bases' : `/api/admin/bases/${base!.id}`, {
         method: isNew ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
@@ -237,6 +242,18 @@ function BaseModal({
         <label className="ed__fld">
           <span>Описание (опц.)</span>
           <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={240} placeholder="короткая подсказка для гостя" />
+        </label>
+        <label className="ed__fld">
+          <span>Категория (опц.)</span>
+          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} maxLength={40} list="cat-suggestions" placeholder="напр. «Коктейли», «Кофе», «Лимонады»" />
+          <datalist id="cat-suggestions">
+            <option value="Коктейли" />
+            <option value="Кофе" />
+            <option value="Лимонады" />
+            <option value="Чай" />
+            <option value="Снеки" />
+            <option value="Мороженое" />
+          </datalist>
         </label>
         <label className="ed__fld">
           <span>Цена, ₽</span>
@@ -326,6 +343,7 @@ function ModModal({
   const [name, setName] = useState(mod?.name ?? '');
   const [priceDelta, setPriceDelta] = useState(mod?.priceDelta ?? '0');
   const [available, setAvailable] = useState<boolean>(mod?.available ?? true);
+  const [defaultSelected, setDefaultSelected] = useState<boolean>(mod?.defaultSelected ?? false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -333,7 +351,7 @@ function ModModal({
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
-      const body = { name, priceDelta, ...(isNew ? { groupId } : { available }) };
+      const body = { name, priceDelta, defaultSelected, ...(isNew ? { groupId } : { available }) };
       const r = await fetch(isNew ? '/api/admin/modifiers' : `/api/admin/modifiers/${mod!.id}`, {
         method: isNew ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
@@ -356,6 +374,10 @@ function ModModal({
         <label className="ed__fld">
           <span>Доплата, ₽ (0, если без доплаты)</span>
           <input type="text" inputMode="decimal" value={priceDelta} onChange={(e) => setPriceDelta(e.target.value)} placeholder="0" />
+        </label>
+        <label className="ed__check">
+          <input type="checkbox" checked={defaultSelected} onChange={(e) => setDefaultSelected(e.target.checked)} />
+          <span>Выбран по умолчанию (для «Айс-латте с ванилью» и т.п.)</span>
         </label>
         {!isNew && (
           <label className="ed__check">

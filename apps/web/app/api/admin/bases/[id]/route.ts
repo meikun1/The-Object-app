@@ -21,6 +21,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     data.name = v;
   }
   if ('description' in body) data.description = body.description ? String(body.description).slice(0, 240) : null;
+  if ('category' in body) data.category = body.category ? String(body.category).trim().slice(0, 40) || null : null;
   if ('price' in body) {
     const p = String(body.price);
     if (!/^\d+(\.\d{1,2})?$/.test(p)) return NextResponse.json({ error: 'price: число' }, { status: 422 });

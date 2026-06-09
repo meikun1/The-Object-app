@@ -69,12 +69,14 @@ model Guest {
 
 // ======================= КОНСТРУКТОР (МЕНЮ) =======================
 
-// Основа напитка («Джин-тоник», «Лимонад», «Кофе»).
+// Позиция меню («Джин-тоник», «Лимонад», «Кофе», коктейль без модификаторов).
+// Категория используется для секций в конструкторе («Коктейли», «Кофе», …).
 model Base {
   id            String         @id @default(cuid())
   name          String
   description   String?
   price         Decimal        @db.Decimal(10, 2)
+  category      String?        // «Коктейли», «Кофе», «Лимонады», «Снеки» …
   available     Boolean        @default(true) // стоп-лист
   sortOrder     Int            @default(0)
   // Маппинг на номенклатуру r_keeper (Этап 7).
@@ -101,15 +103,18 @@ model ModifierGroup {
 
 // Конкретный модификатор внутри группы.
 model Modifier {
-  id            String        @id @default(cuid())
-  group         ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId       String
-  name          String        // «Двойной», «Лайм», «Без льда»
-  priceDelta    Decimal       @default(0) @db.Decimal(10, 2)
-  available     Boolean       @default(true)
-  sortOrder     Int           @default(0)
-  rkeeperModId  String?
-  cartSelections CartItemModifier[]
+  id              String        @id @default(cuid())
+  group           ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId         String
+  name            String        // «Двойной», «Лайм», «Без льда»
+  priceDelta      Decimal       @default(0) @db.Decimal(10, 2)
+  // По умолчанию выбран — для «уже включённых» модификаторов
+  // («Айс-латте» с сиропом «Ваниль» из коробки).
+  defaultSelected Boolean       @default(false)
+  available       Boolean       @default(true)
+  sortOrder       Int           @default(0)
+  rkeeperModId    String?
+  cartSelections  CartItemModifier[]
 
   @@index([groupId])
 }

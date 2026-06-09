@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'name: 1..80 символов' }, { status: 422 });
   }
   const description = body.description ? String(body.description).slice(0, 240) : null;
+  const category = body.category ? String(body.category).trim().slice(0, 40) || null : null;
   const price = String(body.price ?? '');
   if (!/^\d+(\.\d{1,2})?$/.test(price)) {
     return NextResponse.json({ error: 'price: число с не более чем 2 знаками после точки' }, { status: 422 });
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
   const sortOrder = (last?.sortOrder ?? 0) + 1;
 
   const base = await prisma.base.create({
-    data: { name, description, price, sortOrder, available: true },
+    data: { name, description, price, category, sortOrder, available: true },
   });
   return NextResponse.json({ base: { ...base, price: base.price.toString() } });
 }

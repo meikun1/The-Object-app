@@ -38,24 +38,26 @@ export async function POST(req: Request) {
   const createBase = async (base: {
     name: string;
     description?: string;
+    category?: string;
     price: string;
     sortOrder: number;
-    groups: {
+    groups?: {
       name: string;
       required?: boolean;
       minSelect?: number;
       maxSelect?: number;
-      modifiers: { name: string; priceDelta?: string }[];
+      modifiers: { name: string; priceDelta?: string; defaultSelected?: boolean }[];
     }[];
   }) => {
     await prisma.base.create({
       data: {
         name: base.name,
         description: base.description,
+        category: base.category,
         price: base.price,
         sortOrder: base.sortOrder,
         groups: {
-          create: base.groups.map((g, gi) => ({
+          create: (base.groups ?? []).map((g, gi) => ({
             name: g.name,
             required: g.required ?? false,
             minSelect: g.minSelect ?? 0,
@@ -65,6 +67,7 @@ export async function POST(req: Request) {
               create: g.modifiers.map((m, mi) => ({
                 name: m.name,
                 priceDelta: m.priceDelta ?? '0',
+                defaultSelected: m.defaultSelected ?? false,
                 sortOrder: mi,
               })),
             },
@@ -74,31 +77,33 @@ export async function POST(req: Request) {
     });
   };
 
+  // === Коктейли (без модификаторов — добавляются в 1 тап) ===
   await createBase({
-    name: 'Джин-тоник',
-    description: 'Классическая база: джин, тоник, лёд.',
-    price: '350',
-    sortOrder: 1,
-    groups: [
-      { name: 'Крепость', required: true, minSelect: 1, maxSelect: 1,
-        modifiers: [{ name: 'Классический' }, { name: 'Лёгкий' }, { name: 'Двойной', priceDelta: '150' }] },
-      { name: 'Цитрус', required: false, minSelect: 0, maxSelect: 2,
-        modifiers: [{ name: 'Лайм' }, { name: 'Грейпфрут', priceDelta: '30' }, { name: 'Лимон' }] },
-      { name: 'Лёд', required: true, minSelect: 1, maxSelect: 1,
-        modifiers: [{ name: 'Со льдом' }, { name: 'Без льда' }] },
-    ],
+    category: 'Коктейли', name: 'Негрони',
+    description: 'Джин, биттер, мартини россо, апельсин.',
+    price: '550', sortOrder: 1,
+  });
+  await createBase({
+    category: 'Коктейли', name: 'Эспрессо-мартини',
+    description: 'Эспрессо, водка, кофейный ликёр.',
+    price: '550', sortOrder: 2,
+  });
+  await createBase({
+    category: 'Коктейли', name: 'Опен Объект',
+    description: 'Фирменный: оркард, фиеро, персик, супер-джус.',
+    price: '650', sortOrder: 3,
   });
 
+  // === Лимонады — конструктор ===
   await createBase({
-    name: 'Авторский лимонад',
+    category: 'Лимонады', name: 'Авторский лимонад',
     description: 'Свежий, газированный, на ваш вкус.',
-    price: '300',
-    sortOrder: 2,
+    price: '300', sortOrder: 10,
     groups: [
       { name: 'Вкус', required: true, minSelect: 1, maxSelect: 1,
         modifiers: [{ name: 'Малина' }, { name: 'Маракуйя' }, { name: 'Облепиха' }] },
       { name: 'Газация', required: true, minSelect: 1, maxSelect: 1,
-        modifiers: [{ name: 'С газом' }, { name: 'Без газа' }] },
+        modifiers: [{ name: 'С газом', defaultSelected: true }, { name: 'Без газа' }] },
       { name: 'Доп. сироп', required: false, minSelect: 0, maxSelect: 3,
         modifiers: [
           { name: 'Мята', priceDelta: '20' },
@@ -108,16 +113,52 @@ export async function POST(req: Request) {
     ],
   });
 
+  // === Кофе — фиксированные позиции с опциональными сиропами ===
+  // Часть позиций имеют сироп «по умолчанию» включён (Айс-латте, Раф).
+  const coffeeSyrups = [
+    { name: 'Ваниль', priceDelta: '30' },
+    { name: 'Карамель', priceDelta: '30' },
+    { name: 'Кокос', priceDelta: '30' },
+  ];
+  const coffeeMilk = [
+    { name: 'Коровье' },
+    { name: 'Растительное', priceDelta: '50' },
+  ];
   await createBase({
-    name: 'Кофе',
-    description: 'Эспрессо-база с молоком и сиропом.',
-    price: '200',
-    sortOrder: 3,
+    category: 'Кофе', name: 'Эспрессо',
+    description: 'Насыщенный, классический.', price: '150', sortOrder: 20,
+  });
+  await createBase({
+    category: 'Кофе', name: 'Капучино',
+    price: '250', sortOrder: 21,
     groups: [
-      { name: 'Молоко', required: false, minSelect: 0, maxSelect: 1,
-        modifiers: [{ name: 'Коровье' }, { name: 'Растительное', priceDelta: '50' }] },
-      { name: 'Сироп', required: false, minSelect: 0, maxSelect: 2,
-        modifiers: [{ name: 'Ваниль', priceDelta: '30' }, { name: 'Карамель', priceDelta: '30' }] },
+      { name: 'Молоко', required: false, maxSelect: 1, modifiers: coffeeMilk },
+      { name: 'Сироп', required: false, maxSelect: 1, modifiers: coffeeSyrups },
+    ],
+  });
+  await createBase({
+    category: 'Кофе', name: 'Раф',
+    description: 'Сливочный с ванилью.', price: '290', sortOrder: 22,
+    groups: [
+      { name: 'Сироп', required: false, maxSelect: 1,
+        modifiers: [
+          { name: 'Ваниль', priceDelta: '0', defaultSelected: true },
+          { name: 'Карамель', priceDelta: '0' },
+          { name: 'Кокос', priceDelta: '0' },
+        ] },
+    ],
+  });
+  await createBase({
+    category: 'Кофе', name: 'Айс-латте',
+    description: 'Эспрессо, молоко, сироп, лёд.', price: '290', sortOrder: 23,
+    groups: [
+      { name: 'Молоко', required: false, maxSelect: 1, modifiers: coffeeMilk },
+      { name: 'Сироп', required: false, maxSelect: 1,
+        modifiers: [
+          { name: 'Ваниль', priceDelta: '0', defaultSelected: true },
+          { name: 'Карамель', priceDelta: '0' },
+          { name: 'Кокос', priceDelta: '0' },
+        ] },
     ],
   });
 

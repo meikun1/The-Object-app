@@ -24,6 +24,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     data.priceDelta = p;
   }
   if (typeof body.available === 'boolean') data.available = body.available;
+  if (typeof body.defaultSelected === 'boolean') data.defaultSelected = body.defaultSelected;
   if (Number.isFinite(body.sortOrder)) data.sortOrder = Math.trunc(body.sortOrder);
   if (Object.keys(data).length === 0) return NextResponse.json({ error: 'нечего обновлять' }, { status: 422 });
 

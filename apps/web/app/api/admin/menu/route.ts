@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   }
 
   const bases = await prisma.base.findMany({
-    orderBy: { sortOrder: 'asc' },
+    orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
     include: {
       groups: {
         orderBy: { sortOrder: 'asc' },
@@ -26,13 +26,15 @@ export async function GET(req: Request) {
   return NextResponse.json({
     bases: bases.map((b) => ({
       id: b.id, name: b.name, description: b.description,
-      price: b.price.toString(), available: b.available, sortOrder: b.sortOrder,
+      price: b.price.toString(),
+      category: b.category, available: b.available, sortOrder: b.sortOrder,
       groups: b.groups.map((g) => ({
         id: g.id, name: g.name, required: g.required,
         minSelect: g.minSelect, maxSelect: g.maxSelect, sortOrder: g.sortOrder,
         modifiers: g.modifiers.map((m) => ({
           id: m.id, name: m.name,
           priceDelta: m.priceDelta.toString(),
+          defaultSelected: m.defaultSelected,
           available: m.available, sortOrder: m.sortOrder,
         })),
       })),

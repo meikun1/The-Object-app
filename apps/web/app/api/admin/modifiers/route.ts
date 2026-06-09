@@ -32,6 +32,7 @@ export async function POST(req: Request) {
       groupId: body.groupId,
       name,
       priceDelta,
+      defaultSelected: !!body.defaultSelected,
       sortOrder: (last?.sortOrder ?? -1) + 1,
       available: true,
     },

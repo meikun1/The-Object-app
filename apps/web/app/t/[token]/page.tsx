@@ -58,6 +58,7 @@ export default async function GuestPage({ params }: Props) {
     name: b.name,
     description: b.description,
     price: b.price.toString(),
+    category: b.category,
     groups: b.groups.map((g) => ({
       id: g.id,
       name: g.name,
@@ -68,6 +69,7 @@ export default async function GuestPage({ params }: Props) {
         id: m.id,
         name: m.name,
         priceDelta: m.priceDelta.toString(),
+        defaultSelected: m.defaultSelected,
       })),
     })),
   }));

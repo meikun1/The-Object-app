@@ -9,7 +9,7 @@
 // Серверное состояние тянем поллингом каждые ~2 с.
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-type Modifier = { id: string; name: string; priceDelta: string };
+type Modifier = { id: string; name: string; priceDelta: string; defaultSelected?: boolean };
 type Group = {
   id: string; name: string;
   required: boolean; minSelect: number; maxSelect: number;
@@ -18,6 +18,7 @@ type Group = {
 type Base = {
   id: string; name: string;
   description: string | null; price: string;
+  category?: string | null;
   groups: Group[];
 };
 
@@ -56,6 +57,18 @@ type Props = {
 
 const fmt = (n: number | string) => Number(n).toLocaleString('ru-RU');
 const cartKey = (id: string) => `object_guest_${id}`;
+
+/** Группируем основы по категориям, сохраняя порядок появления. */
+function basesByCategory(bases: Base[]): { name: string; items: Base[] }[] {
+  const map = new Map<string, Base[]>();
+  for (const b of bases) {
+    const key = b.category?.trim() || '';
+    const arr = map.get(key) ?? [];
+    arr.push(b);
+    map.set(key, arr);
+  }
+  return Array.from(map.entries()).map(([name, items]) => ({ name, items }));
+}
 
 export default function ConstructorClient({ tableId, token, tableLabel, bases }: Props) {
   const [me, setMe] = useState<{ name: string; guestId: string | null } | null>(null);
@@ -141,6 +154,17 @@ export default function ConstructorClient({ tableId, token, tableLabel, bases }:
     }
   };
 
+  /** Тап по карточке: с модификаторами — открываем модалку, без — кладём сразу. */
+  const onPick = (base: Base) => {
+    if (!me) { setShowName(true); return; }
+    if (base.groups.length === 0) {
+      // 1-tap add: дефолтных модификаторов нет → пустые selections, qty = 1.
+      void addToCart(base, {}, 1);
+    } else {
+      setPicking(base);
+    }
+  };
+
   const removeItem = async (cartId: string) => {
     setErr(null);
     try {
@@ -189,15 +213,23 @@ export default function ConstructorClient({ tableId, token, tableLabel, bases }:
 
       {orders.length > 0 && <OrdersHistory orders={orders} />}
 
-      <section className="ctr__bases">
-        {bases.map((b) => (
-          <article key={b.id} className="bcard" onClick={() => setPicking(b)}>
-            <h3 className="bcard__name">{b.name}</h3>
-            {b.description && <p className="bcard__desc">{b.description}</p>}
-            <div className="bcard__price">{fmt(b.price)} ₽</div>
-          </article>
-        ))}
-      </section>
+      {basesByCategory(bases).map((cat) => (
+        <section key={cat.name} className="ctr__catsec">
+          {cat.name && <h2 className="ctr__catsec-title">{cat.name}</h2>}
+          <div className="ctr__bases">
+            {cat.items.map((b) => (
+              <article key={b.id} className="bcard" onClick={() => onPick(b)}>
+                <h3 className="bcard__name">{b.name}</h3>
+                {b.description && <p className="bcard__desc">{b.description}</p>}
+                <div className="bcard__price">
+                  {fmt(b.price)} ₽
+                  {b.groups.length === 0 && <span className="bcard__tap">тап → в корзину</span>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
 
       <div className="ctr__pad" />
 
@@ -391,8 +423,13 @@ function CartRow({
 function Picker({
   base, onClose, onAdd,
 }: { base: Base; onClose: () => void; onAdd: (sel: Record<string, string[]>, qty: number) => void }) {
+  // Дефолтные модификаторы — берём первые maxSelect из тех, что отмечены
+  // defaultSelected (так корректно для групп с maxSelect = 1).
   const [selections, setSelections] = useState<Record<string, string[]>>(() =>
-    Object.fromEntries(base.groups.map((g) => [g.id, []])),
+    Object.fromEntries(base.groups.map((g) => [
+      g.id,
+      g.modifiers.filter((m) => m.defaultSelected).slice(0, g.maxSelect).map((m) => m.id),
+    ])),
   );
   const [qty, setQty] = useState(1);
 

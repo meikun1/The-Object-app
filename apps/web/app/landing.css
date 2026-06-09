@@ -64,7 +64,7 @@ body.landing-open { overflow: hidden; }
 
 /* ---------- layout ---------- */
 .landing .wrap { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--pad); }
-.landing section { position: relative; z-index: 2; }
+.landing section { position: relative; z-index: 2; isolation: isolate; }
 .landing .section-pad { padding-block: calc(120px * var(--space)); }
 
 .landing .eyebrow {
@@ -347,6 +347,7 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
 /* ---------- BAR ---------- */
 .landing .bar { background: var(--bg-2); }
 .landing .bar .cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 6vw, 90px); }
+.landing .bar .cols--solo { grid-template-columns: minmax(0, 760px); justify-content: center; }
 .landing .bar .col h3 { font-size: 30px; display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
 .landing .bar .col h3 .ln { flex: 1; height: 1px; background: var(--line); }
 .landing .bar .col .sub {
@@ -369,6 +370,7 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
 /* ---------- EVENTS ---------- */
 .landing .events { background: var(--bg-3); overflow: hidden; }
 .landing .events .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.landing .events .grid--two { grid-template-columns: repeat(2, 1fr); max-width: 880px; margin: 0 auto; }
 .landing .ev {
   position: relative; border: 1px solid var(--line-soft); border-radius: 4px; overflow: hidden;
   background: var(--panel) center/cover no-repeat; min-height: 380px;
@@ -573,13 +575,17 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
   .landing .brand .mark { width: 32px; height: 32px; font-size: 16px; }
   .landing .nav-cta { gap: 10px; }
 
-  /* hero: меньше падингов, легче дышит, кнопки на всю ширину */
-  .landing .hero .wrap { padding-top: 90px; padding-bottom: 50px; }
+  /* hero: убираем 100svh — содержимое в потоке, ничего не пустует */
+  .landing .hero { display: block; min-height: auto; padding-bottom: 40px; }
+  .landing .hero .wrap { padding-top: 100px; padding-bottom: 0; }
   .landing .hero h1 { font-size: clamp(46px, 13vw, 84px); }
   .landing .hero .lead { font-size: 15px; margin-top: 22px; }
   .landing .hero-actions { gap: 10px; margin-top: 28px; flex-direction: column; align-items: stretch; }
   .landing .hero-actions .btn { width: 100%; }
-  .landing .hero-meta { left: var(--pad); right: var(--pad); bottom: 22px; flex-direction: column; align-items: flex-start; gap: 14px; }
+  .landing .hero-meta {
+    position: static; margin: 32px var(--pad) 0;
+    flex-direction: column; align-items: flex-start; gap: 14px;
+  }
   .landing .hero-meta .stats { gap: 22px; flex-wrap: wrap; }
   .landing .hero-meta .stat .n { font-size: 26px; }
 

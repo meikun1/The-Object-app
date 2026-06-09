@@ -88,8 +88,8 @@ export default function Page() {
             <div className="feat">
               <div className="f" data-reveal data-delay="1"><h4>Авторская забивка</h4><p>Кальянные мастера с опытом от 5 лет</p></div>
               <div className="f" data-reveal data-delay="2"><h4>Тихие залы</h4><p>Зонирование и приватные ложи</p></div>
-              <div className="f" data-reveal data-delay="3"><h4>Винил &amp; lo-fi</h4><p>Музыка, под которую слышно собеседника</p></div>
-              <div className="f" data-reveal data-delay="4"><h4>Кухня до утра</h4><p>Горячее и закуски всю ночь</p></div>
+              <div className="f" data-reveal data-delay="3"><h4>Авторский бар</h4><p>Коктейли, лимонады и фирменный чай</p></div>
+              <div className="f" data-reveal data-delay="4"><h4>До утра</h4><p>Открыто до 03:00 — для долгих вечеров</p></div>
             </div>
           </div>
           <div className="visual" data-reveal data-delay="2">
@@ -164,12 +164,12 @@ export default function Page() {
         <div className="wrap">
           <div className="head">
             <div className="l">
-              <span className="eyebrow" data-reveal>Бар &amp; кухня</span>
+              <span className="eyebrow" data-reveal>Авторский бар</span>
               <h2 className="title" data-reveal data-delay="1">Что в <em>бокале</em></h2>
-              <p className="lead" data-reveal data-delay="2">Коктейли, которые дружат с дымом, и кухня, которая держит вечер до самого закрытия.</p>
+              <p className="lead" data-reveal data-delay="2">Коктейли, которые дружат с дымом — авторская карта от шефа.</p>
             </div>
           </div>
-          <div className="cols">
+          <div className="cols cols--solo">
             <div className="col" data-reveal>
               <h3>Коктейли <span className="ln" /></h3>
               <div className="sub">Авторская карта</div>
@@ -178,15 +178,6 @@ export default function Page() {
               <BarItem name="Дымный сауэр" desc="Мескаль, лайм, тимьян, белок" price="720" />
               <BarItem name="Грейпфрут & розмарин" desc="Джин, тоник, свежий грейпфрут" price="590" />
               <BarItem name="Безалкогольный сад" desc="Бузина, мята, яблоко, содовая" price="420" />
-            </div>
-            <div className="col" data-reveal data-delay="2">
-              <h3>Кухня <span className="ln" /></h3>
-              <div className="sub">До 06:00</div>
-              <BarItem name="Сырная тарелка" desc="Пять сортов, мёд, орехи, груша" price="890" />
-              <BarItem name="Тартар из говядины" desc="Каперсы, перепелиный желток, бриошь" price="740" />
-              <BarItem name="Креветки на гриле" desc="Чеснок, чили, лимон" price="820" />
-              <BarItem name="Брускетты сет" desc="Томаты, лосось, рикотта · 3 шт" price="560" />
-              <BarItem name="Десерт «Объект»" desc="Шоколадный фондан, солёная карамель" price="480" />
             </div>
           </div>
         </div>
@@ -201,16 +192,8 @@ export default function Page() {
               <h2 className="title" data-reveal data-delay="1">Поводы <em>прийти</em></h2>
             </div>
           </div>
-          <div className="grid">
-            <article className="ev" data-reveal data-delay="1" style={{ backgroundImage: 'url(/img/lounge.jpg)' }}>
-              <div className="shade" />
-              <div className="body">
-                <span className="when">Каждый четверг · 21:00</span>
-                <h3>Винил-вечера</h3>
-                <p>Резидент крутит джаз и lo-fi на пластинках. Первый кальян — со скидкой 20%.</p>
-              </div>
-            </article>
-            <article className="ev" data-reveal data-delay="2" style={{ backgroundImage: 'url(/img/cocktail.jpg)' }}>
+          <div className="grid grid--two">
+            <article className="ev" data-reveal data-delay="1" style={{ backgroundImage: 'url(/img/cocktail.jpg)' }}>
               <div className="shade" />
               <div className="body">
                 <span className="when">Пн–Чт · 18:00–20:00</span>
@@ -218,7 +201,7 @@ export default function Page() {
                 <p>Скидка 30% на всю кальянную карту в ранние часы. Лучшее время для разговора.</p>
               </div>
             </article>
-            <article className="ev" data-reveal data-delay="3" style={{ backgroundImage: 'url(/img/hookah.jpg)' }}>
+            <article className="ev" data-reveal data-delay="2" style={{ backgroundImage: 'url(/img/hookah.jpg)' }}>
               <div className="shade" />
               <div className="body">
                 <span className="when">По запросу</span>
@@ -334,7 +317,7 @@ export default function Page() {
                 <h5>Разделы</h5>
                 <a href="#about">Атмосфера</a>
                 <a href="#menu">Кальяны</a>
-                <a href="#bar">Бар &amp; кухня</a>
+                <a href="#bar">Бар</a>
                 <a href="#events">События</a>
               </div>
               <div className="fcol">

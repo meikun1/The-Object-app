@@ -91,6 +91,12 @@ export function orderCard(
     else if (order.status === 'READY') lines.push(`🍸 Готов: ${when}`);
     else lines.push(`🚫 Отклонил: <b>${esc(who)}</b> · ${when}`);
   }
+
+  // Если касса вернула номер чека — показываем его. На моке всегда есть для
+  // ACCEPTED/READY; на реальной интеграции может отсутствовать (касса упала).
+  if (order.rkeeperOrderId && order.status !== 'REJECTED') {
+    lines.push(`🧾 Чек r_keeper: <code>${esc(order.rkeeperOrderId)}</code>`);
+  }
   return lines.join('\n');
 }
 

@@ -15,6 +15,7 @@ import {
   orderInlineKeyboard,
   staffKeyboard,
 } from '@/lib/bot-ui';
+import { rkeeper } from '@/lib/rkeeper';
 import type { Staff } from '@prisma/client';
 
 export const runtime = 'nodejs';
@@ -300,7 +301,7 @@ async function handleCallback(cb: TgCallback) {
     action === 'reject' ? 'REJECTED' :
                           'READY';
 
-  const updated = await prisma.order.update({
+  let updated = await prisma.order.update({
     where: { id: orderId },
     data: {
       status: newStatus,
@@ -309,6 +310,40 @@ async function handleCallback(cb: TgCallback) {
     },
     include: { items: true, session: { include: { table: true } } },
   });
+
+  // При «Принять» отправляем заказ в кассу (mock или real в зависимости от
+  // RKEEPER_MODE). Если касса вернёт номер чека — сохраняем в rkeeperOrderId
+  // и используем в карточке. Ошибка кассы не отменяет приём заказа барменом.
+  if (action === 'accept') {
+    try {
+      const r = await rkeeper.sendOrder(updated, updated.session.table.label);
+      if (r.ok) {
+        updated = await prisma.order.update({
+          where: { id: updated.id },
+          data: { rkeeperOrderId: r.receiptId },
+          include: { items: true, session: { include: { table: true } } },
+        });
+        await prisma.auditLog.create({
+          data: {
+            type: 'rkeeper.sent',
+            message: `Чек ${r.receiptId} — заказ ${orderId.slice(-6).toUpperCase()}`,
+            meta: { orderId, receiptId: r.receiptId },
+          },
+        });
+      } else {
+        console.error('rkeeper sendOrder failed', r.error);
+        await prisma.auditLog.create({
+          data: {
+            type: 'rkeeper.fail',
+            message: `Касса вернула ошибку: ${r.error}`,
+            meta: { orderId, error: r.error },
+          },
+        });
+      }
+    } catch (e: any) {
+      console.error('rkeeper sendOrder threw', e);
+    }
+  }
 
   await prisma.auditLog.create({
     data: {
@@ -319,7 +354,7 @@ async function handleCallback(cb: TgCallback) {
   });
 
   await answerCallbackQuery(cb.id,
-    newStatus === 'ACCEPTED' ? '✓ Принят' :
+    newStatus === 'ACCEPTED' ? (updated.rkeeperOrderId ? `✓ Принят · чек ${updated.rkeeperOrderId}` : '✓ Принят') :
     newStatus === 'READY'    ? '🍹 Готов' :
                                '✗ Отклонён');
 

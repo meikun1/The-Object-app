@@ -195,6 +195,8 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
       <TelegramSection token={token} />
 
+      <RkeeperSection token={token} />
+
       <StaffSection items={staff} />
 
       {qrFor && <QrModal table={qrFor} token={token} onClose={() => setQrFor(null)} />}
@@ -275,6 +277,47 @@ function TelegramSection({ token }: { token: string }) {
         )}
       </div>
       {msg && <p className={`adm__msg ${msg.ok ? 'adm__msg--ok' : 'adm__msg--err'}`}>{msg.text}</p>}
+    </section>
+  );
+}
+
+/* ===== r_keeper-секция (Этап 5) ===== */
+function RkeeperSection({ token }: { token: string }) {
+  const [mode, setMode] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/rkeeper/status', { headers: { 'x-admin-token': token } })
+      .then((r) => r.json())
+      .then((j) => setMode(j.mode ?? null))
+      .catch(() => {});
+  }, [token]);
+
+  const isMock = mode === 'mock';
+  const isReal = mode === 'real';
+
+  return (
+    <section className="adm__card">
+      <h2 className="adm__h2">r_keeper</h2>
+      <p className="adm__note">
+        Адаптер кассы. Управляется переменной окружения <code>RKEEPER_MODE</code> в Vercel.
+        При «Принять» в Telegram-боте бармена заказ автоматически уходит на кассу и
+        номер чека сохраняется в карточке заказа.
+      </p>
+      {mode === null && <p className="adm__note">Загружаем статус…</p>}
+      {isMock && (
+        <p className="adm__msg adm__msg--ok">
+          Режим: <b>mock</b> · кассе ничего не отправляется, генерируется фиктивный номер вида
+          <code> RK-{new Date().getFullYear()}-XXXXXX</code>. Полностью отрабатывает поток без реальной
+          интеграции — для тестов и мягкого запуска.
+        </p>
+      )}
+      {isReal && (
+        <p className="adm__msg adm__msg--err">
+          Режим: <b>real</b> · но боевой адаптер ещё не реализован (Этап 7).
+          Поставьте <code>RKEEPER_MODE=mock</code> в Vercel env, либо дайте credentials
+          r_keeper для подключения.
+        </p>
+      )}
     </section>
   );
 }

@@ -13,15 +13,13 @@ GitHub-репозиторий `meikun1/the-object-app`. Подключите Ver
 
 ### 2. Настройки проекта в Vercel
 
-`vercel.json` в корне репо уже задаёт всё нужное (framework, build,
-install, output). Поэтому в Settings → General:
+Конфиг `apps/web/vercel.json` лежит в репо: указывает framework и
+install-команду для монорепо. В Vercel UI:
 
-- **Root Directory:** `/` (репо-корень, **не** `apps/web`).
-  Если уже стоит `apps/web` — нажмите Edit и верните в корень.
-  Иначе пути из `vercel.json` удвоятся (`apps/web/apps/web/.next`).
+- **Root Directory:** `apps/web` (Edit → выбрать подпапку → Save).
 - Framework Preset: Next.js (определится автоматически).
-- Build Command / Install Command / Output Directory: оставить
-  пустыми (override off) — берутся из `vercel.json`.
+- Build Command / Install Command / Output Directory: **оставить
+  пустыми** (Override off) — берутся из `vercel.json` и автодетекта.
 
 ### 3. Переменные окружения (Environment Variables)
 
@@ -36,8 +34,8 @@ install, output). Поэтому в Settings → General:
 
 ### 4. Deploy
 
-После Redeploy / нового пуша Vercel выдаст адрес вида
-`https://the-object-app-xxxx.vercel.app`. Открыть → проверить:
+Deployments → ⋯ у последнего деплоя → **Redeploy**. После Success Vercel
+выдаст адрес вида `https://the-object-app-xxxx.vercel.app`. Открыть → проверить:
 
 - лендинг отрисован, грейн/виньетка/анимации работают;
 - форма брони отправляется, приходит сообщение в Telegram.
@@ -56,7 +54,7 @@ Vercel взял старый pnpm. В Settings → General → Install Command
 поставьте принудительно:
 
 ```
-corepack enable && pnpm install --frozen-lockfile
+corepack enable && cd ../.. && pnpm install --frozen-lockfile --filter "@app/web..."
 ```
 
 ---

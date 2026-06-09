@@ -402,6 +402,11 @@ export default function Page() {
                 loading="lazy"
                 allow="geolocation"
               />
+              {/* Поверх iframe — собственный pin с пульсом, гарантированно указывает на заведение */}
+              <div className="map-pin" aria-hidden="true">
+                <span className="map-pin__dot" />
+                <span className="map-pin__lbl">The Object</span>
+              </div>
               <a className="map-open" href="https://yandex.ru/maps/org/obyekt/58828646557/" target="_blank" rel="noopener">
                 Открыть в Яндекс.Картах ↗
               </a>

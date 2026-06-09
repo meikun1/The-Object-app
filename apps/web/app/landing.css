@@ -202,24 +202,24 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
 }
 .landing .hero h1 .l { display: block; overflow: hidden; }
 .landing .hero h1 .l span {
-  display: block; transform: translateY(110%);
-  animation: riseIn 1.1s cubic-bezier(.16, 1, .3, 1) forwards;
+  display: block;
+  animation: riseIn 1.1s cubic-bezier(.16, 1, .3, 1) both;
 }
 .landing .hero h1 .l:nth-child(2) span {
   animation-delay: .12s; font-style: italic; color: var(--accent-2);
 }
-@keyframes riseIn { to { transform: translateY(0); } }
-.landing .hero .lead { margin-top: 30px; opacity: 0; animation: fadeUp 1s ease .55s forwards; }
+@keyframes riseIn { from { transform: translateY(110%); } to { transform: translateY(0); } }
+.landing .hero .lead { margin-top: 30px; animation: fadeUp 1s ease .35s both; }
 .landing .hero-actions {
   display: flex; flex-wrap: wrap; gap: 16px; margin-top: 42px;
-  opacity: 0; animation: fadeUp 1s ease .7s forwards;
+  animation: fadeUp 1s ease .5s both;
 }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 
 .landing .hero-meta {
   position: absolute; left: var(--pad); right: var(--pad); bottom: 34px; z-index: 3;
   display: flex; justify-content: space-between; align-items: flex-end; gap: 30px;
-  opacity: 0; animation: fadeUp 1s ease 1s forwards;
+  animation: fadeUp 1s ease .7s both;
 }
 .landing .hero-meta .stats { display: flex; gap: 46px; }
 .landing .hero-meta .stat .n { font-family: var(--display); font-size: 34px; color: var(--accent-2); line-height: 1; }
@@ -513,6 +513,28 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
 .landing .map-open:hover { background: var(--accent); color: var(--bg); }
 .landing .reviews-more { display: flex; justify-content: center; margin-top: 36px; }
 
+/* большой CTA-блок отзывов вместо фейковых карточек */
+.landing .reviews-cta {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: clamp(28px, 5vw, 50px) clamp(24px, 4vw, 40px);
+  text-align: center; max-width: 640px; margin: 0 auto;
+  position: relative; overflow: hidden;
+}
+.landing .reviews-cta::before {
+  content: ''; position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+  width: 360px; height: 360px; border-radius: 50%;
+  background: radial-gradient(circle, var(--glow), transparent 65%);
+  opacity: .35; pointer-events: none;
+}
+.landing .rcta__top {
+  position: relative; z-index: 2; display: inline-flex; align-items: baseline; gap: 14px;
+  margin-bottom: 18px;
+}
+.landing .rcta__stars { color: var(--accent); letter-spacing: 4px; font-size: 20px; }
+.landing .rcta__rate { font-family: var(--display); font-size: 26px; color: var(--accent-2); }
+.landing .rcta__text { position: relative; z-index: 2; color: var(--ink-soft); margin: 0 auto 28px; max-width: 42ch; font-size: 15px; }
+.landing .reviews-cta .btn { position: relative; z-index: 2; }
+
 /* ---------- FOOTER ---------- */
 .landing .footer { background: var(--bg-2); border-top: 1px solid var(--line-soft); padding: 70px 0 36px; }
 .landing .footer .top {
@@ -569,33 +591,41 @@ body.landing-open .landing .nav-mobile { transform: translateX(0); }
    ============================================================ */
 @media (max-width: 720px) {
   /* nav: тоньше отступы, лого крупнее, бургер по центру по высоте */
-  .landing .nav { padding: 14px 0; }
-  .landing .nav.solid { padding: 10px 0; }
+  .landing .nav { padding: 12px 0; }
+  .landing .nav.solid { padding: 9px 0; }
   .landing .brand .name { font-size: 16px; letter-spacing: .14em; }
   .landing .brand .mark { width: 32px; height: 32px; font-size: 16px; }
   .landing .nav-cta { gap: 10px; }
 
-  /* hero: убираем 100svh — содержимое в потоке, ничего не пустует */
-  .landing .hero { display: block; min-height: auto; padding-bottom: 40px; }
-  .landing .hero .wrap { padding-top: 100px; padding-bottom: 0; }
-  .landing .hero h1 { font-size: clamp(46px, 13vw, 84px); }
-  .landing .hero .lead { font-size: 15px; margin-top: 22px; }
-  .landing .hero-actions { gap: 10px; margin-top: 28px; flex-direction: column; align-items: stretch; }
+  /* hero: компактно, без пустоты — контент сразу под шапкой, всё в потоке */
+  .landing .hero {
+    display: block; min-height: auto; padding: 84px 0 28px;
+    overflow: visible;
+  }
+  .landing .hero canvas { display: none; }   /* canvas-дым ел батарею и иногда «пустил» экран */
+  .landing .hero .wrap { padding-top: 0; padding-bottom: 0; }
+  .landing .hero .eyebrow { font-size: 11px; letter-spacing: .3em; }
+  .landing .hero h1 { font-size: clamp(44px, 11vw, 64px); margin-top: 18px; }
+  .landing .hero .lead { font-size: 14.5px; margin-top: 16px; }
+  .landing .hero-actions { gap: 10px; margin-top: 22px; flex-direction: column; align-items: stretch; }
   .landing .hero-actions .btn { width: 100%; }
   .landing .hero-meta {
-    position: static; margin: 32px var(--pad) 0;
-    flex-direction: column; align-items: flex-start; gap: 14px;
+    position: static; margin: 24px var(--pad) 0;
+    flex-direction: column; align-items: flex-start; gap: 12px;
   }
   .landing .hero-meta .stats { gap: 22px; flex-wrap: wrap; }
-  .landing .hero-meta .stat .n { font-size: 26px; }
+  .landing .hero-meta .stat .n { font-size: 24px; }
 
   /* eyebrow — ужать дефис, чтобы не ломал слово */
   .landing .eyebrow { font-size: 10.5px; letter-spacing: .32em; gap: 10px; }
   .landing .eyebrow::before { width: 24px; }
 
-  /* sections общий padding */
-  .landing .section-pad { padding-block: 64px; }
-  .landing h2.title { font-size: clamp(32px, 8vw, 52px); }
+  /* sections общий padding — компактнее, чтобы не было «пустот» между ними */
+  .landing .section-pad { padding-block: 44px; }
+  .landing .divider { display: none; }   /* убираем тонкую линию-разделитель, она съедала пространство */
+  .landing h2.title { font-size: clamp(30px, 7.5vw, 48px); }
+  .landing .head { margin-bottom: 28px; }
+  .landing .head h2 { margin-top: 14px; }
 
   /* about: визуал ужать; badge-float подвинуть и уменьшить */
   .landing .about .visual .tall { height: 240px; }

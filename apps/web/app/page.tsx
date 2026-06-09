@@ -219,17 +219,20 @@ export default function Page() {
           <div className="head">
             <div className="l">
               <span className="eyebrow" data-reveal>Гости говорят</span>
-              <h2 className="title" data-reveal data-delay="1">Отзывы <em>вечеров</em></h2>
+              <h2 className="title" data-reveal data-delay="1">Отзывы <em>гостей</em></h2>
+              <p className="lead" data-reveal data-delay="2">
+                Живые отзывы наших гостей — на странице заведения в Яндекс.Картах. Туда же приходят новые, мы их не прячем.
+              </p>
             </div>
           </div>
-          <div className="review-grid">
-            <Review name="Артём" role="завсегдатай" text="Лучший дым в городе и атмосфера, в которую возвращаешься. Кальянщики реально слышат, что ты любишь." delay={1} />
-            <Review name="Марина" role="гость" text="Приходим компанией каждую пятницу. Тихо, красиво, коктейли на уровне хорошего бара. Кухня — отдельная любовь." delay={2} />
-            <Review name="Дмитрий" role="отмечал ДР" text="Бронировали ложу на день рождения — всё на пять. Свет, музыка, дым. Гости до сих пор вспоминают." delay={3} />
-          </div>
-          <div className="reviews-more" data-reveal data-delay="3">
-            <a className="btn ghost" href="https://yandex.ru/maps/org/obyekt/58828646557/reviews/" target="_blank" rel="noopener">
-              <span>Все отзывы на Яндекс.Картах</span>
+          <div className="reviews-cta" data-reveal data-delay="2">
+            <div className="rcta__top">
+              <span className="rcta__stars">★★★★★</span>
+              <span className="rcta__rate">4.9 / 5</span>
+            </div>
+            <p className="rcta__text">Десятки отзывов в Яндексе — атмосфера, вкус и сервис, по которым к нам возвращаются.</p>
+            <a className="btn" href="https://yandex.ru/maps/org/obyekt/58828646557/reviews/" target="_blank" rel="noopener">
+              <span>Открыть отзывы</span>
             </a>
           </div>
         </div>
@@ -373,18 +376,3 @@ function BarItem({ name, desc, price }: { name: string; desc: string; price: str
   );
 }
 
-function Review({ name, role, text, delay }: { name: string; role: string; text: string; delay: number }) {
-  return (
-    <article className="review" data-reveal data-delay={delay}>
-      <div className="stars">★★★★★</div>
-      <blockquote>«{text}»</blockquote>
-      <div className="who">
-        <span className="av">{name.charAt(0)}</span>
-        <div>
-          <div className="nm">{name}</div>
-          <div className="rl">{role}</div>
-        </div>
-      </div>
-    </article>
-  );
-}

@@ -8,16 +8,20 @@ Postgres (например, бесплатный Neon).
 
 ### 1. Залить репозиторий
 
-GitHub-репозиторий `meikun1/the-object-app`. Ветка `claude/focused-meitner-aa0twe`
-уже запушена; смержите её в `main` или подключите Vercel прямо к ней.
+GitHub-репозиторий `meikun1/the-object-app`. Подключите Vercel к нужной
+ветке (`main` или `claude/focused-meitner-aa0twe`).
 
-### 2. Создать проект в Vercel
+### 2. Настройки проекта в Vercel
 
-1. <https://vercel.com> → Add New → Project → Import репозитория.
-2. **Root Directory:** `apps/web` (важно — это монорепо).
-3. Framework Preset должен сам определиться как **Next.js**.
-4. Build Command: оставить по умолчанию (`next build`).
-5. Install Command: `pnpm install` (Vercel сам подхватит pnpm-workspace).
+`vercel.json` в корне репо уже задаёт всё нужное (framework, build,
+install, output). Поэтому в Settings → General:
+
+- **Root Directory:** `/` (репо-корень, **не** `apps/web`).
+  Если уже стоит `apps/web` — нажмите Edit и верните в корень.
+  Иначе пути из `vercel.json` удвоятся (`apps/web/apps/web/.next`).
+- Framework Preset: Next.js (определится автоматически).
+- Build Command / Install Command / Output Directory: оставить
+  пустыми (override off) — берутся из `vercel.json`.
 
 ### 3. Переменные окружения (Environment Variables)
 
@@ -32,19 +36,28 @@ GitHub-репозиторий `meikun1/the-object-app`. Ветка `claude/focus
 
 ### 4. Deploy
 
-После первого деплоя Vercel выдаст адрес вида
+После Redeploy / нового пуша Vercel выдаст адрес вида
 `https://the-object-app-xxxx.vercel.app`. Открыть → проверить:
 
 - лендинг отрисован, грейн/виньетка/анимации работают;
 - форма брони отправляется, приходит сообщение в Telegram.
 
-### Что если форма не присылает сообщение
+### Если форма не присылает сообщение
 
 - Проверить, что бот **писал вам первым** (Telegram не позволит боту
   написать в чат, который сам не инициировал диалог). Откройте бота в
   Telegram, нажмите Start.
 - В Vercel → Project → Logs смотреть `/api/booking` — там будет ошибка
   Telegram, если что-то не так.
+
+### Если падает с `ERR_INVALID_THIS` при install
+
+Vercel взял старый pnpm. В Settings → General → Install Command
+поставьте принудительно:
+
+```
+corepack enable && pnpm install --frozen-lockfile
+```
 
 ---
 

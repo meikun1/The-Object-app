@@ -5,11 +5,13 @@ import LandingClient from '@/components/landing/LandingClient';
 import Smoke from '@/components/landing/Smoke';
 import BookingForm from '@/components/landing/BookingForm';
 import ClosingTimer from '@/components/landing/ClosingTimer';
+import AgeGate from '@/components/landing/AgeGate';
 
 export default function Page() {
   return (
     <div className="landing">
       <LandingClient />
+      <AgeGate />
 
       {/* ============ NAV ============ */}
       <header className="nav">
@@ -335,9 +337,20 @@ export default function Page() {
               </div>
             </div>
           </div>
+          <div className="legal-row">
+            <p>
+              Информация о товарах и услугах размещена для лиц старше 18 лет.
+              Чрезмерное употребление алкоголя и курение вредит вашему здоровью.
+              Никотин, кальянный дым и алкоголь вызывают зависимость.
+            </p>
+            <p className="legal-row__org">
+              [Реквизиты Оператора · ИП/ООО, ИНН, ОГРН, юр. адрес — заполнить].
+            </p>
+          </div>
           <div className="bot">
             <span>© <span id="landing-year">2026</span> The Object · Все права защищены</span>
-            <span className="age"><b>18</b> Курение вредит вашему здоровью</span>
+            <span className="age"><b>18</b> +</span>
+            <span><a href="/privacy">Политика конфиденциальности</a></span>
             <span><a href="#top">Наверх ↑</a></span>
           </div>
         </div>

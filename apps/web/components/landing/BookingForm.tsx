@@ -8,9 +8,11 @@ export default function BookingForm() {
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!consent) { setErr('Для отправки нужно дать согласие на обработку данных.'); return; }
     const form = e.currentTarget;
     if (!form.checkValidity()) { form.reportValidity(); return; }
     const fd = new FormData(form);
@@ -85,7 +87,14 @@ export default function BookingForm() {
           <textarea name="note" placeholder="Зал, повод, любимый вкус…" maxLength={500} />
         </div>
         <input type="text" name="company" className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" />
-        <button className="btn" type="submit" disabled={busy}>
+        <label className="form-consent">
+          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          <span>
+            Я даю согласие на обработку моих персональных данных в соответствии с
+            <a href="/privacy" target="_blank" rel="noopener"> Политикой</a>. Подтверждаю, что мне исполнилось 18 лет.
+          </span>
+        </label>
+        <button className="btn" type="submit" disabled={busy || !consent}>
           <span>{busy ? 'Отправляем…' : 'Отправить заявку'}</span>
         </button>
         {err && <p className="form-err">{err}</p>}

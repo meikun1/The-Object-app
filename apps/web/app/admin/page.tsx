@@ -1,11 +1,97 @@
 'use client';
-// Админка. Пока — таблица столов + кнопка разовой засевки демо-данными.
-// Этап 6 — полноценная админка (меню, QR, смены, аудит).
+// Админка. Вход — единоразовый ввод ADMIN_ACCESS_TOKEN, дальше хранится
+// в localStorage этого браузера. Действия (засевка и т.п.) шлются с
+// заголовком x-admin-token. Этап 6 — полноценная админка.
 import { useEffect, useState } from 'react';
 
 type TableRow = { id: string; label: string; kind: string };
 
+const STORAGE_KEY = 'object_admin_token';
+
 export default function AdminPage() {
+  // null = ещё не проверили localStorage; '' = разлогинен; string = вошёл.
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) ?? '' : '';
+    setToken(t);
+  }, []);
+
+  if (token === null) {
+    return <main className="adm" />;
+  }
+  if (!token) {
+    return <Login onLogged={(t) => { localStorage.setItem(STORAGE_KEY, t); setToken(t); }} />;
+  }
+  return (
+    <Dashboard
+      token={token}
+      onLogout={() => { localStorage.removeItem(STORAGE_KEY); setToken(''); }}
+    />
+  );
+}
+
+/* ============================== ЛОГИН ============================== */
+function Login({ onLogged }: { onLogged: (token: string) => void }) {
+  const [val, setVal] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const t = val.trim();
+    if (!t) return;
+    setBusy(true); setErr(null);
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'x-admin-token': t },
+      });
+      if (res.ok) {
+        onLogged(t);
+      } else {
+        const j = await res.json().catch(() => ({}));
+        setErr(j.error === 'forbidden' ? 'Неверный токен' : (j.error ?? `Ошибка ${res.status}`));
+      }
+    } catch (e: any) {
+      setErr(`Сеть: ${String(e?.message ?? e)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <main className="adm adm--login">
+      <div className="login">
+        <p className="eyebrow">THE OBJECT · Админка</p>
+        <h1 className="login__title">Вход</h1>
+        <p className="login__hint">
+          Введите <code>ADMIN_ACCESS_TOKEN</code> один раз — браузер запомнит.
+        </p>
+        <form onSubmit={submit} className="login__form">
+          <label className="login__fld">
+            <span>Токен</span>
+            <input
+              type="password"
+              autoFocus
+              autoComplete="current-password"
+              value={val}
+              onChange={(e) => setVal(e.target.value)}
+              placeholder="••••••••••••••••"
+            />
+          </label>
+          {err && <p className="login__err">{err}</p>}
+          <button type="submit" className="adm__btn" disabled={busy || !val.trim()}>
+            {busy ? 'Проверяем…' : 'Войти'}
+          </button>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+/* ============================== ПАНЕЛЬ ============================== */
+function Dashboard({ token, onLogout }: { token: string; onLogout: () => void }) {
   const [tables, setTables] = useState<TableRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [seedMsg, setSeedMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -21,18 +107,17 @@ export default function AdminPage() {
   useEffect(load, []);
 
   const seed = async () => {
-    const token = window.prompt('Введите ADMIN_ACCESS_TOKEN (тот же, что в Vercel env):');
-    if (!token) return;
-    setSeeding(true);
-    setSeedMsg(null);
+    if (!window.confirm('Перезаписать меню и столы демо-данными?')) return;
+    setSeeding(true); setSeedMsg(null);
     try {
       const res = await fetch('/api/admin/seed', {
         method: 'POST',
-        headers: { 'x-admin-token': token.trim() },
+        headers: { 'x-admin-token': token },
       });
       const j = await res.json();
       if (!res.ok) {
         setSeedMsg({ ok: false, text: `Ошибка: ${j.error ?? res.status}` });
+        if (res.status === 403) onLogout();
       } else {
         setSeedMsg({ ok: true, text: `Готово: столов ${j.tables}, основ ${j.bases}.` });
         load();
@@ -50,8 +135,11 @@ export default function AdminPage() {
   return (
     <main className="adm">
       <header className="adm__head">
-        <p className="eyebrow">THE OBJECT · Админка</p>
-        <h1 className="adm__title">Столы</h1>
+        <div>
+          <p className="eyebrow">THE OBJECT · Админка</p>
+          <h1 className="adm__title">Столы</h1>
+        </div>
+        <button className="adm__logout" onClick={onLogout} title="Выйти">Выход</button>
       </header>
 
       {error && <div className="adm__card adm__card--err">Ошибка: {error}</div>}
@@ -59,14 +147,10 @@ export default function AdminPage() {
       <section className="adm__card">
         <h2 className="adm__h2">Засевка демо-данных</h2>
         <p className="adm__note">
-          Создаёт 15 столов и 3 основы конструктора (Джин-тоник, Лимонад, Кофе).
-          Идемпотентна — повторный вызов перезаписывает меню.
+          Создаёт 15 столов и 3 основы конструктора. Идемпотентна — повторный
+          вызов перезаписывает меню.
         </p>
-        <button
-          className={`adm__btn${seeding ? ' adm__btn--busy' : ''}`}
-          onClick={seed}
-          disabled={seeding}
-        >
+        <button className="adm__btn" onClick={seed} disabled={seeding}>
           {seeding ? 'Заполняем…' : 'Засеять демо-данные'}
         </button>
         {seedMsg && (

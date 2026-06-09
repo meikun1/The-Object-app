@@ -483,3 +483,99 @@ a { color: inherit; text-decoration: none; }
   border-radius: 2px; transition: color .25s, border-color .25s;
 }
 .me__add:hover { color: var(--blood); border-color: var(--blood); }
+
+/* ============================================================
+   /admin/print-qr — печатные QR-наклейки A4
+   ============================================================ */
+.printqr {
+  background: #f4f1ea; color: #15110c; font-family: var(--b);
+  min-height: 100svh; padding: 24px;
+}
+.printqr__bar {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+  max-width: 1100px; margin: 0 auto 24px; padding-bottom: 18px;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+}
+.printqr__bar h1 { font-family: var(--d); font-weight: 400; font-size: 1.8rem; margin: 0; color: #15110c; }
+.printqr__bar p { margin: 4px 0 0; color: #645b4e; font-size: 14px; }
+.printqr__act { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.printqr__back {
+  color: #645b4e; font-size: 13px; letter-spacing: .04em;
+  border: 1px solid rgba(0,0,0,.15); padding: 9px 14px; border-radius: 3px;
+  transition: color .2s, border-color .2s;
+}
+.printqr__back:hover { color: #cba35a; border-color: #cba35a; }
+.printqr__print {
+  background: #cba35a; color: #15110c; border: 1px solid #cba35a;
+  padding: 12px 22px; border-radius: 3px;
+  font-family: var(--b); font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+  cursor: pointer;
+}
+.printqr__print:disabled { opacity: .5; cursor: progress; }
+.printqr__hint {
+  max-width: 1100px; margin: 0 auto 22px; color: #645b4e; font-size: 13.5px; line-height: 1.55;
+}
+
+.printqr__sheet {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+
+.qrcard {
+  background: #fff; border: 1px solid #d4cfc4; border-radius: 6px;
+  padding: 24px 22px 22px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  break-inside: avoid;
+}
+.qrcard__brand { display: inline-flex; align-items: center; gap: 10px; }
+.qrcard__mark {
+  width: 30px; height: 30px; border: 1px solid #cba35a; border-radius: 50%;
+  display: grid; place-items: center; color: #cba35a;
+  font-family: var(--d); font-size: 16px; font-style: italic;
+}
+.qrcard__name {
+  font-family: var(--d); font-size: 16px; letter-spacing: .2em; text-transform: uppercase; color: #15110c;
+}
+.qrcard__hint {
+  font-family: var(--b); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: #8c8170; margin: 4px 0 6px;
+}
+.qrcard__qr {
+  width: 220px; height: 220px; display: block;
+  border: 1px solid #ece7dc;
+  background: #fff;
+}
+.qrcard__qr--loading {
+  display: grid; place-items: center; color: #8c8170; font-size: 32px;
+}
+.qrcard__label {
+  margin-top: 6px;
+  font-family: var(--d); font-size: 28px; font-weight: 400; color: #15110c;
+  display: inline-flex; align-items: baseline; gap: 10px;
+}
+.qrcard__label b { font-weight: 400; }
+.qrcard__vip {
+  font-family: var(--b); font-size: 11px; letter-spacing: .18em;
+  background: #cba35a; color: #15110c; padding: 2px 8px; border-radius: 30px;
+}
+.qrcard__leg {
+  font-family: var(--b); font-size: 11px; letter-spacing: .08em; color: #8c8170;
+  margin: 4px 0 0;
+}
+
+/* Print rules ============== */
+@media print {
+  @page { size: A4; margin: 12mm 10mm; }
+  body { background: #fff !important; }
+  .no-print { display: none !important; }
+  .printqr { background: #fff; padding: 0; }
+  .printqr__sheet { max-width: none; gap: 8mm; grid-template-columns: 1fr 1fr; }
+  .qrcard {
+    border-color: #999;
+    /* 4 на лист A4: ~95×130 мм каждая, с заметным отступом */
+    padding: 8mm 6mm;
+    page-break-inside: avoid;
+  }
+  .qrcard__qr { width: 60mm; height: 60mm; }
+  .qrcard__brand, .qrcard__hint, .qrcard__label, .qrcard__leg { color: #15110c !important; }
+}

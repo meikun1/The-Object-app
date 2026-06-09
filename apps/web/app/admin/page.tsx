@@ -165,7 +165,14 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       <section className="adm__card">
         <div className="adm__row-h2">
           <h2 className="adm__h2">{tables.length === 0 ? 'Пока пусто' : `Столы — ${tables.length}`}</h2>
-          <button className="trow__btn" onClick={() => setEditFor('new')}>+ Добавить</button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {tables.length > 0 && (
+              <a className="trow__btn" href="/admin/print-qr" target="_blank" rel="noopener">
+                Печать всех QR
+              </a>
+            )}
+            <button className="trow__btn" onClick={() => setEditFor('new')}>+ Добавить</button>
+          </div>
         </div>
         {tables.length === 0 ? (
           <p className="adm__note">Нажмите «+ Добавить» или «Засеять демо-данные».</p>

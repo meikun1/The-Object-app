@@ -9,8 +9,9 @@ import { esc, InlineKeyboard, ReplyKeyboard } from './telegram';
 export function staffKeyboard(staff: Pick<Staff, 'onShift' | 'role'>): ReplyKeyboard {
   const shift = staff.onShift ? '🔴 Уйти со смены' : '🟢 Встать на смену';
   const row1 = staff.onShift ? [{ text: shift }, { text: '📋 Активные' }] : [{ text: shift }];
-  const row2 = [{ text: '📊 Моя смена' }, { text: 'ℹ️ Помощь' }];
-  return { keyboard: [row1, row2], resize_keyboard: true, is_persistent: true };
+  const row2 = [{ text: '🎛 Панель' }, { text: '📊 Моя смена' }];
+  const row3 = [{ text: 'ℹ️ Помощь' }];
+  return { keyboard: [row1, row2, row3], resize_keyboard: true, is_persistent: true };
 }
 
 /** Inline-кнопки для конкретного заказа по его статусу. */
@@ -128,6 +129,7 @@ export const HELP_TEXT =
   `<b>THE OBJECT</b> — бот бармена\n\n` +
   `Нижняя клавиатура — основные действия. Команды:\n` +
   `<code>/start</code> — главное меню\n` +
+  `<code>/panel</code> — мини-приложение «Панель бармена»\n` +
   `<code>/orders</code> — активные заказы\n` +
   `<code>/stats</code> — итоги смены\n` +
   `<code>/shift_on</code>, <code>/shift_off</code> — смена\n` +
@@ -143,6 +145,7 @@ export const WELCOME_GUEST =
 
 export const COMMANDS = [
   { command: 'start',     description: 'Главное меню' },
+  { command: 'panel',     description: 'Открыть мини-приложение' },
   { command: 'orders',    description: 'Активные заказы' },
   { command: 'stats',     description: 'Итоги смены' },
   { command: 'shift_on',  description: 'Встать на смену' },

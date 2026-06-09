@@ -105,6 +105,8 @@ async function handleMessage(m: TgMessage) {
       return showActiveOrders(chatId, staff);
     case '/stats':
       return showStats(chatId, staff);
+    case '/panel':
+      return sendPanelButton(chatId);
     default:
       if (raw.startsWith('/')) {
         await sendMessage(chatId, 'Не понял команду. Откройте меню: /start', {
@@ -121,9 +123,23 @@ function normalizeButtonText(t: string): string {
     case '🔴 Уйти со смены':   return '/shift_off';
     case '📋 Активные':        return '/orders';
     case '📊 Моя смена':       return '/stats';
+    case '🎛 Панель':          return '/panel';
     case 'ℹ️ Помощь':           return '/help';
     default: return t;
   }
+}
+
+async function sendPanelButton(chatId: number) {
+  const base = (process.env.PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '');
+  if (!base) {
+    await sendMessage(chatId, '⚠️ PUBLIC_APP_URL не настроен. Панель недоступна.');
+    return;
+  }
+  await sendMessage(chatId, '🎛 <b>Панель бармена</b>\nОткройте в Telegram — все заказы, столы и состав смены в одном окне.', {
+    reply_markup: {
+      inline_keyboard: [[{ text: '🍸 Открыть панель', web_app: { url: `${base}/panel` } }]],
+    },
+  });
 }
 
 /* ============================== ХЭНДЛЕРЫ ============================== */

@@ -21,7 +21,11 @@ async function call<T = unknown>(method: string, body: unknown): Promise<T> {
   return j.result as T;
 }
 
-export type InlineKeyboard = { text: string; callback_data: string }[][];
+export type InlineButton =
+  | { text: string; callback_data: string }
+  | { text: string; url: string }
+  | { text: string; web_app: { url: string } };
+export type InlineKeyboard = InlineButton[][];
 
 export type ReplyKeyboard = {
   keyboard: { text: string }[][];

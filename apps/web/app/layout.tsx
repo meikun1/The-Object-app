@@ -1,6 +1,7 @@
 import './globals.css';
 import './landing.css';
 import './order.css';
+import './staff-panel.css';
 import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { prata, golos, mono, cormorant, jost } from '@/lib/fonts';

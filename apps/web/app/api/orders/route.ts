@@ -1,9 +1,11 @@
-// Создание заказа гостем за столом. Этап 2 — без сессий и без модерации
-// бармена: сохраняем заказ в БД со статусом PENDING и шлём уведомление
-// в Telegram (тот же канал, что у брони). Подтверждение бармена — Этап 4.
+// Создание заказа гостем за столом. Этап 4: после сохранения шлём
+// уведомление всем сотрудникам на смене с кнопками «Принять» / «Отклонить».
+// Если на смене никого нет — фолбэк в BOOKING_CHAT_ID (как раньше),
+// чтобы заказ не потерялся.
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { notifyShiftAboutOrder } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -94,24 +96,34 @@ export async function POST(req: Request) {
     include: { items: true },
   });
 
-  // Параллельно — уведомление бармену в Telegram (best-effort).
-  void notifyTelegram(order, body.tableId, body.guestName);
+  // Параллельно — уведомление сменам с кнопками подтверждения.
+  // Если на смене никого — фолбэк в BOOKING_CHAT_ID, чтобы заказ не потерялся.
+  const table = await prisma.table.findUnique({ where: { id: body.tableId } });
+  void (async () => {
+    try {
+      const delivered = await notifyShiftAboutOrder(order, table?.label ?? body.tableId, body.guestName);
+      if (delivered === 0) await fallbackNotify(order, table?.label ?? body.tableId, body.guestName);
+    } catch (e) {
+      console.error('orders: notify failed', e);
+      await fallbackNotify(order, table?.label ?? body.tableId, body.guestName);
+    }
+  })();
 
   return NextResponse.json({ ok: true, orderId: order.id, total: total.toString() });
 }
 
-async function notifyTelegram(
+async function fallbackNotify(
   order: { items: { baseName: string; summary: string; qty: number; lineTotal: Prisma.Decimal }[] },
-  tableId: string,
+  tableLabel: string,
   guestName: string,
 ) {
   const token = process.env.BOT_TOKEN;
   const chatId = process.env.BOOKING_CHAT_ID;
   if (!token || !chatId) return;
-  const table = await prisma.table.findUnique({ where: { id: tableId } });
   const lines = [
     '🛎 Новый заказ — THE OBJECT',
-    `Стол: ${table?.label ?? tableId}`,
+    '(никто не на смене, отправляю в общий чат)',
+    `Стол: ${tableLabel}`,
     `Гость: ${guestName}`,
     '',
     ...order.items.map((i) => `• ${i.qty}× ${i.summary} — ${i.lineTotal} ₽`),
@@ -123,6 +135,6 @@ async function notifyTelegram(
       body: JSON.stringify({ chat_id: chatId, text: lines.join('\n') }),
     });
   } catch (e) {
-    console.error('orders: telegram notify failed', e);
+    console.error('orders: fallback telegram notify failed', e);
   }
 }

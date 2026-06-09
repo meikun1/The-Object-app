@@ -85,8 +85,11 @@ function Login({ onLogged }: { onLogged: (token: string) => void }) {
 }
 
 /* ============================== ПАНЕЛЬ ============================== */
+type StaffRow = { id: string; name: string; role: string; authorized: boolean; onShift: boolean; lastLoginAt: string | null };
+
 function Dashboard({ token, onLogout }: { token: string; onLogout: () => void }) {
   const [tables, setTables] = useState<TableRow[]>([]);
+  const [staff, setStaff] = useState<StaffRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [seedMsg, setSeedMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [seeding, setSeeding] = useState(false);
@@ -97,9 +100,13 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       .then((r) => r.json())
       .then((j) => setTables(j.tables ?? []))
       .catch((e) => setError(String(e?.message ?? e)));
+    fetch('/api/admin/staff', { headers: { 'x-admin-token': token } })
+      .then((r) => r.json())
+      .then((j) => setStaff(j.staff ?? []))
+      .catch(() => {});
   };
 
-  useEffect(load, []);
+  useEffect(load, [token]);
 
   const seed = async () => {
     if (!window.confirm('Перезаписать меню и столы демо-данными?')) return;
@@ -180,12 +187,116 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         )}
       </section>
 
+      <TelegramSection token={token} />
+
+      <StaffSection items={staff} />
+
       <section className="adm__card adm__card--muted">
-        Здесь появятся редактор меню, смены, аудит. Этап 6.
+        Здесь появятся редактор меню, аудит. Этап 6.
       </section>
 
       {qrFor && <QrModal table={qrFor} token={token} onClose={() => setQrFor(null)} />}
     </main>
+  );
+}
+
+/* ===== Telegram-секция ===== */
+function TelegramSection({ token }: { token: string }) {
+  const [info, setInfo] = useState<{ url: string; pending_update_count: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const refresh = () => {
+    fetch('/api/admin/telegram/setup', { headers: { 'x-admin-token': token } })
+      .then((r) => r.json())
+      .then((j) => setInfo(j.info ?? null))
+      .catch(() => {});
+  };
+  useEffect(refresh, [token]);
+
+  const enable = async () => {
+    setBusy(true); setMsg(null);
+    try {
+      const r = await fetch('/api/admin/telegram/setup', { method: 'POST', headers: { 'x-admin-token': token } });
+      const j = await r.json();
+      if (!r.ok) setMsg({ ok: false, text: `Ошибка: ${j.error ?? r.status}` });
+      else setMsg({ ok: true, text: `Webhook включён: ${j.url}` });
+      refresh();
+    } finally { setBusy(false); }
+  };
+  const disable = async () => {
+    if (!window.confirm('Отключить webhook? Бот перестанет получать сообщения.')) return;
+    setBusy(true); setMsg(null);
+    try {
+      const r = await fetch('/api/admin/telegram/setup', { method: 'DELETE', headers: { 'x-admin-token': token } });
+      const j = await r.json();
+      if (!r.ok) setMsg({ ok: false, text: `Ошибка: ${j.error ?? r.status}` });
+      else setMsg({ ok: true, text: 'Webhook отключён' });
+      refresh();
+    } finally { setBusy(false); }
+  };
+
+  const active = info?.url && info.url.length > 0;
+
+  return (
+    <section className="adm__card">
+      <h2 className="adm__h2">Telegram-бот</h2>
+      <p className="adm__note">
+        Включите webhook один раз — после этого бот начнёт принимать сообщения
+        от сотрудников и присылать вам заказы. Сотрудники пишут боту
+        <code> /login ПАРОЛЬ</code> и встают на смену <code>/shift_on</code>.
+      </p>
+      {active ? (
+        <p className="adm__msg adm__msg--ok">
+          Активен: <code style={{ wordBreak: 'break-all' }}>{info!.url}</code>
+          {' · '}очередь: {info!.pending_update_count}
+        </p>
+      ) : (
+        <p className="adm__msg adm__msg--err">Webhook не настроен — бот не получает сообщения.</p>
+      )}
+      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+        <button className="adm__btn" onClick={enable} disabled={busy}>
+          {active ? 'Перенастроить' : 'Включить webhook'}
+        </button>
+        {active && (
+          <button className="trow__btn trow__btn--danger" onClick={disable} disabled={busy}>
+            Отключить
+          </button>
+        )}
+      </div>
+      {msg && <p className={`adm__msg ${msg.ok ? 'adm__msg--ok' : 'adm__msg--err'}`}>{msg.text}</p>}
+    </section>
+  );
+}
+
+/* ===== список сотрудников ===== */
+function StaffSection({ items }: { items: StaffRow[] }) {
+  return (
+    <section className="adm__card">
+      <h2 className="adm__h2">Сотрудники</h2>
+      {items.length === 0 ? (
+        <p className="adm__note">Пока никто не входил в бота. Команды:
+          {' '}<code>/start</code>, <code>/login ПАРОЛЬ</code>, <code>/shift_on</code>.
+        </p>
+      ) : (
+        <div className="adm__rows">
+          {items.map((s) => (
+            <div key={s.id} className="trow">
+              <div>
+                <div className="trow__label">{s.name}</div>
+                <div style={{ fontFamily: 'var(--m)', fontSize: '.7rem', color: 'var(--faint)', marginTop: 4 }}>
+                  {s.role}
+                  {s.lastLoginAt && ' · вход ' + new Date(s.lastLoginAt).toLocaleString('ru-RU')}
+                </div>
+              </div>
+              <span className={s.onShift ? 'adm__chip adm__chip--on' : 'adm__chip'}>
+                {s.onShift ? 'на смене' : 'выкл'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

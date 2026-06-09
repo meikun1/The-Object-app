@@ -4,7 +4,7 @@
 // Вход — единоразовый ввод ADMIN_ACCESS_TOKEN (сохраняется в localStorage).
 import { useEffect, useState } from 'react';
 
-type TableRow = { id: string; label: string; kind: string };
+type TableRow = { id: string; label: string; kind: string; active?: boolean; sortOrder?: number };
 
 const STORAGE_KEY = 'object_admin_token';
 
@@ -94,9 +94,11 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const [seedMsg, setSeedMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [qrFor, setQrFor] = useState<TableRow | null>(null);
+  const [editFor, setEditFor] = useState<TableRow | 'new' | null>(null);
 
   const load = () => {
-    fetch('/api/tables')
+    // В админке грузим все столы (включая неактивные) через защищённый эндпоинт.
+    fetch('/api/admin/tables', { headers: { 'x-admin-token': token } })
       .then((r) => r.json())
       .then((j) => setTables(j.tables ?? []))
       .catch((e) => setError(String(e?.message ?? e)));
@@ -161,26 +163,28 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       </section>
 
       <section className="adm__card">
-        <h2 className="adm__h2">{tables.length === 0 ? 'Пока пусто' : `Столы — ${tables.length}`}</h2>
+        <div className="adm__row-h2">
+          <h2 className="adm__h2">{tables.length === 0 ? 'Пока пусто' : `Столы — ${tables.length}`}</h2>
+          <button className="trow__btn" onClick={() => setEditFor('new')}>+ Добавить</button>
+        </div>
         {tables.length === 0 ? (
-          <p className="adm__note">Сначала нажмите «Засеять демо-данные».</p>
+          <p className="adm__note">Нажмите «+ Добавить» или «Засеять демо-данные».</p>
         ) : (
           <>
             <p className="adm__note">
-              Тыкните на стол — это гостевой конструктор по подписанной QR-ссылке.
-              «QR» — показать код для печати. «Сброс» — закрыть текущую сессию
-              стола и сделать все старые QR недействительными.
+              Тык по названию стола — редактирование. «QR» — код для печати наклейки.
+              «Сброс» — закрыть сессию и инвалидировать все старые QR этого стола.
             </p>
             {hall.length > 0 && (
               <>
                 <h3 className="adm__group">Зал</h3>
-                <TableGrid items={hall} onQr={(t) => setQrFor(t)} token={token} onChanged={load} />
+                <TableGrid items={hall} onQr={(t) => setQrFor(t)} onEdit={(t) => setEditFor(t)} token={token} onChanged={load} />
               </>
             )}
             {vip.length > 0 && (
               <>
                 <h3 className="adm__group">VIP</h3>
-                <TableGrid items={vip} onQr={(t) => setQrFor(t)} token={token} onChanged={load} vip />
+                <TableGrid items={vip} onQr={(t) => setQrFor(t)} onEdit={(t) => setEditFor(t)} token={token} onChanged={load} vip />
               </>
             )}
           </>
@@ -196,6 +200,14 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       </section>
 
       {qrFor && <QrModal table={qrFor} token={token} onClose={() => setQrFor(null)} />}
+      {editFor && (
+        <TableEditor
+          table={editFor === 'new' ? null : editFor}
+          token={token}
+          onClose={() => setEditFor(null)}
+          onSaved={() => { setEditFor(null); load(); }}
+        />
+      )}
     </main>
   );
 }
@@ -302,10 +314,11 @@ function StaffSection({ items }: { items: StaffRow[] }) {
 
 /* ===== плитка столов ===== */
 function TableGrid({
-  items, onQr, token, onChanged, vip,
+  items, onQr, onEdit, token, onChanged, vip,
 }: {
   items: TableRow[];
   onQr: (t: TableRow) => void;
+  onEdit: (t: TableRow) => void;
   token: string;
   onChanged: () => void;
   vip?: boolean;
@@ -323,9 +336,7 @@ function TableGrid({
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         alert(`Ошибка: ${j.error ?? res.status}`);
-      } else {
-        onChanged();
-      }
+      } else { onChanged(); }
     } catch (e: any) {
       alert(`Сеть: ${String(e?.message ?? e)}`);
     } finally { setBusy(null); }
@@ -334,8 +345,15 @@ function TableGrid({
   return (
     <div className="adm__rows">
       {items.map((t) => (
-        <div key={t.id} className={`trow${vip ? ' trow--vip' : ''}`}>
-          <span className="trow__label">{t.label}</span>
+        <div key={t.id} className={`trow${vip ? ' trow--vip' : ''}${t.active === false ? ' trow--off' : ''}`}>
+          <button
+            className="trow__label trow__label--btn"
+            onClick={() => onEdit(t)}
+            title="Редактировать стол"
+          >
+            {t.label}
+            {t.active === false && <span className="trow__off-chip">выкл</span>}
+          </button>
           <div className="trow__act">
             <button className="trow__btn" onClick={() => onQr(t)}>QR</button>
             <button
@@ -348,6 +366,133 @@ function TableGrid({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ===== редактор стола (создание / правка) ===== */
+function TableEditor({
+  table, token, onClose, onSaved,
+}: {
+  table: TableRow | null;
+  token: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const isNew = !table;
+  const [label, setLabel] = useState(table?.label ?? '');
+  const [kind, setKind] = useState<'HALL' | 'VIP'>((table?.kind as 'HALL' | 'VIP') ?? 'HALL');
+  const [active, setActive] = useState<boolean>(table?.active ?? true);
+  const [sortOrder, setSortOrder] = useState<number>(table?.sortOrder ?? 0);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!label.trim()) { setErr('Название обязательно'); return; }
+    setBusy(true); setErr(null);
+    try {
+      const res = isNew
+        ? await fetch('/api/admin/tables', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+            body: JSON.stringify({ label: label.trim(), kind }),
+          })
+        : await fetch(`/api/admin/tables/${table!.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+            body: JSON.stringify({ label: label.trim(), kind, active, sortOrder }),
+          });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setErr(j.error ?? `Ошибка ${res.status}`);
+      } else { onSaved(); }
+    } catch (e: any) {
+      setErr(`Сеть: ${String(e?.message ?? e)}`);
+    } finally { setBusy(false); }
+  };
+
+  const del = async () => {
+    if (!table) return;
+    if (!window.confirm(`Удалить «${table.label}»? Действие необратимо.`)) return;
+    setBusy(true); setErr(null);
+    try {
+      const res = await fetch(`/api/admin/tables/${table.id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-token': token },
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setErr(j.error ?? `Ошибка ${res.status}`);
+      } else { onSaved(); }
+    } catch (e: any) {
+      setErr(`Сеть: ${String(e?.message ?? e)}`);
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="qrmodal" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <form className="qrmodal__inner ed" onSubmit={save}>
+        <button type="button" className="qrmodal__close" onClick={onClose} aria-label="Закрыть">✕</button>
+        <h3 className="qrmodal__title">{isNew ? 'Новый стол' : table!.label}</h3>
+
+        <label className="ed__fld">
+          <span>Название</span>
+          <input
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            maxLength={40}
+            autoFocus
+            placeholder="напр. «Стол у окна»"
+          />
+        </label>
+
+        <div className="ed__fld">
+          <span>Тип</span>
+          <div className="ed__seg">
+            <button type="button" className={kind === 'HALL' ? 'on' : ''} onClick={() => setKind('HALL')}>Зал</button>
+            <button type="button" className={kind === 'VIP' ? 'on' : ''} onClick={() => setKind('VIP')}>VIP</button>
+          </div>
+        </div>
+
+        {!isNew && (
+          <>
+            <label className="ed__fld">
+              <span>Порядок</span>
+              <input
+                type="number"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value))}
+                min={0}
+                max={9999}
+              />
+            </label>
+            <label className="ed__check">
+              <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+              <span>Активен (виден гостям и в /admin)</span>
+            </label>
+          </>
+        )}
+
+        {err && <p className="adm__msg adm__msg--err">{err}</p>}
+
+        <div className="ed__act">
+          <button type="submit" className="adm__btn" disabled={busy}>
+            {busy ? 'Сохраняем…' : isNew ? 'Создать' : 'Сохранить'}
+          </button>
+          {!isNew && (
+            <button
+              type="button"
+              className="trow__btn trow__btn--danger"
+              onClick={del}
+              disabled={busy}
+            >
+              Удалить
+            </button>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

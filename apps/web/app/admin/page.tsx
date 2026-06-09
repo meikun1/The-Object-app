@@ -379,6 +379,11 @@ function TableEditor({
 }) {
   const isNew = !table;
   const [label, setLabel] = useState(table?.label ?? '');
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
   const [kind, setKind] = useState<'HALL' | 'VIP'>((table?.kind as 'HALL' | 'VIP') ?? 'HALL');
   const [active, setActive] = useState<boolean>(table?.active ?? true);
   const [sortOrder, setSortOrder] = useState<number>(table?.sortOrder ?? 0);
@@ -510,6 +515,13 @@ function QrModal({ table, token, onClose }: { table: TableRow; token: string; on
       })
       .catch((e) => setErr(String(e?.message ?? e)));
   }, [table.id, token]);
+
+  // body scroll lock
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   return (
     <div className="qrmodal" onClick={(e) => e.target === e.currentTarget && onClose()}>

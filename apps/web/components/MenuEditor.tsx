@@ -62,13 +62,51 @@ export default function MenuEditor({ token }: { token: string }) {
     } finally { setBusy(false); }
   };
 
+  // Оптимистичные toggle'ы — UI откликается мгновенно, без ожидания сервера.
+  // На случай ошибки откатываемся к прежнему значению.
   const toggleBaseAvail = async (b: Base) => {
-    await send(`/api/admin/bases/${b.id}`, 'PATCH', { available: !b.available });
-    load();
+    const next = !b.available;
+    setBases((prev) => prev?.map((x) => x.id === b.id ? { ...x, available: next } : x) ?? null);
+    try {
+      await fetch(`/api/admin/bases/${b.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify({ available: next }),
+      });
+    } catch {
+      setBases((prev) => prev?.map((x) => x.id === b.id ? { ...x, available: b.available } : x) ?? null);
+      setErr('Сеть');
+    }
   };
   const toggleModAvail = async (m: Modifier) => {
-    await send(`/api/admin/modifiers/${m.id}`, 'PATCH', { available: !m.available });
-    load();
+    const next = !m.available;
+    setBases((prev) =>
+      prev?.map((b) => ({
+        ...b,
+        groups: b.groups.map((g) => ({
+          ...g,
+          modifiers: g.modifiers.map((mm) => mm.id === m.id ? { ...mm, available: next } : mm),
+        })),
+      })) ?? null,
+    );
+    try {
+      await fetch(`/api/admin/modifiers/${m.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify({ available: next }),
+      });
+    } catch {
+      setBases((prev) =>
+        prev?.map((b) => ({
+          ...b,
+          groups: b.groups.map((g) => ({
+            ...g,
+            modifiers: g.modifiers.map((mm) => mm.id === m.id ? { ...mm, available: m.available } : mm),
+          })),
+        })) ?? null,
+      );
+      setErr('Сеть');
+    }
   };
   const delBase = async (b: Base) => {
     if (!confirm(`Удалить «${b.name}»? Группы и модификаторы тоже удалятся.`)) return;
@@ -129,10 +167,9 @@ export default function MenuEditor({ token }: { token: string }) {
                   type="checkbox"
                   checked={b.available}
                   onChange={() => toggleBaseAvail(b)}
-                  disabled={busy}
                 />
               </label>
-              <button className="trow__btn trow__btn--danger me__del" onClick={() => delBase(b)} disabled={busy}>✕</button>
+              <button className="trow__btn trow__btn--danger me__del" onClick={() => delBase(b)}>✕</button>
             </div>
             {b.description && open[b.id] && <p className="me__desc">{b.description}</p>}
 
@@ -147,7 +184,7 @@ export default function MenuEditor({ token }: { token: string }) {
                           {g.required ? 'обяз.' : 'опц.'} · {g.minSelect}–{g.maxSelect}
                         </i>
                       </button>
-                      <button className="trow__btn trow__btn--danger me__del" onClick={() => delGroup(g)} disabled={busy}>✕</button>
+                      <button className="trow__btn trow__btn--danger me__del" onClick={() => delGroup(g)}>✕</button>
                     </div>
                     <div className="me__mods">
                       {g.modifiers.map((m) => (
@@ -160,9 +197,9 @@ export default function MenuEditor({ token }: { token: string }) {
                             )}
                           </button>
                           <label className="me__avail-mini" title="Есть в продаже">
-                            <input type="checkbox" checked={m.available} onChange={() => toggleModAvail(m)} disabled={busy} />
+                            <input type="checkbox" checked={m.available} onChange={() => toggleModAvail(m)} />
                           </label>
-                          <button className="me__del-mini" onClick={() => delMod(m)} disabled={busy} aria-label="Удалить">✕</button>
+                          <button className="me__del-mini" onClick={() => delMod(m)} aria-label="Удалить">✕</button>
                         </div>
                       ))}
                       <button className="me__add" onClick={() => setEdit({ kind: 'mod', mod: null, groupId: g.id })}>
@@ -397,6 +434,11 @@ function ModModal({
 }
 
 function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
   return (
     <div className="qrmodal" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="qrmodal__inner ed">

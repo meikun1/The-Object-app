@@ -2,16 +2,13 @@
   "name": "@app/api",
   "version": "0.1.0",
   "private": true,
+  "description": "NestJS-вариант API для VPS-деплоя. Схема Prisma общая, лежит в apps/web/prisma.",
   "scripts": {
     "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/main.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init",
-    "seed": "ts-node prisma/seed.ts"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "prisma:generate": "prisma generate --schema=../web/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate deploy --schema=../web/prisma/schema.prisma"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.4",

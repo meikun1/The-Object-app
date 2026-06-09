@@ -353,3 +353,71 @@ a.cr__v:hover { color: var(--blood); }
 .wrap h1 { font-family: var(--d); font-weight: 400; font-size: clamp(2rem, 6vw, 3.2rem); margin: 8px 0 4px; }
 .card { border: 1px solid var(--line); border-radius: 4px; padding: 20px 22px; margin-top: 16px; background: var(--void-2); }
 .ok { color: #4ade80; } .bad { color: var(--blood); }
+
+/* ============================================================
+   КОНСТРУКТОР /t/[token]
+   ============================================================ */
+.ctr { max-width: 920px; margin: 0 auto; padding: clamp(70px, 12vw, 120px) var(--pad) clamp(140px, 18vw, 200px); position: relative; z-index: 2; }
+.ctr__head { margin-bottom: clamp(28px, 4vw, 44px); }
+.ctr__title { font-family: var(--d); font-weight: 400; font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.02; margin: 6px 0 28px; }
+.ctr__name { display: flex; flex-direction: column; gap: 8px; max-width: 380px; }
+.ctr__name span { font-family: var(--m); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.ctr__name input { background: transparent; border: none; border-bottom: 1px solid var(--line); padding: 10px 2px; color: var(--ink); font-family: var(--b); font-size: 1rem; transition: border-color .35s; }
+.ctr__name input:focus { outline: none; border-color: var(--blood); }
+
+.ctr__bases { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: clamp(12px, 1.6vw, 22px); margin-top: 20px; }
+.bcard { background: var(--void-2); border: 1px solid var(--line); padding: clamp(22px, 2.4vw, 32px); cursor: pointer; position: relative; transition: background .35s, border-color .35s, transform .35s var(--ease); }
+.bcard::after { content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 2px; background: var(--blood); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease); }
+.bcard:hover { background: #161210; transform: translateY(-2px); }
+.bcard:hover::after { transform: scaleX(1); }
+.bcard__name { font-family: var(--d); font-weight: 400; font-size: clamp(1.4rem, 2.6vw, 2rem); margin: 0 0 8px; }
+.bcard__desc { color: var(--dim); font-size: .92rem; margin: 0 0 22px; max-width: 34ch; min-height: 2.6em; }
+.bcard__price { font-family: var(--m); font-size: 1rem; color: var(--ink); }
+
+.ctr__cart { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: rgba(10,9,8,.92); backdrop-filter: blur(16px); border-top: 1px solid var(--line); padding: 16px var(--pad) 20px; }
+.ctr__cart-title { font-family: var(--m); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+.ctr__cart-list { list-style: none; max-height: 32vh; overflow-y: auto; margin: 0 0 10px; }
+.citem { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.citem__main { flex: 1; min-width: 0; }
+.citem__name { font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.citem__price { font-family: var(--m); font-size: .8rem; color: var(--dim); margin-top: 2px; }
+.citem__ctl { display: flex; align-items: center; gap: 6px; }
+.citem__ctl button { width: 28px; height: 28px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; border-radius: 2px; font-family: var(--m); }
+.citem__ctl button:hover { border-color: var(--blood); }
+.citem__rm { color: var(--faint) !important; }
+.ctr__total { display: flex; justify-content: space-between; padding: 8px 0 14px; font-family: var(--d); font-size: 1.2rem; }
+.ctr__send { width: 100%; }
+.ctr__err { margin-top: 10px; font-family: var(--m); font-size: .8rem; color: var(--blood); text-align: center; }
+
+/* модалка выбора модификаторов */
+.pmodal { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.65); backdrop-filter: blur(6px); display: grid; place-items: end center; padding: 0; }
+.pmodal__inner { position: relative; width: 100%; max-width: 640px; background: var(--void-2); border: 1px solid var(--line); border-bottom: none; padding: clamp(28px, 3.5vw, 44px); max-height: 90vh; overflow-y: auto; animation: pslide .35s var(--ease); }
+@keyframes pslide { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+.pmodal__close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--dim); font-size: 1.4rem; cursor: pointer; padding: 8px; }
+.pmodal__close:hover { color: var(--blood); }
+.pmodal__name { font-family: var(--d); font-weight: 400; font-size: clamp(1.7rem, 3vw, 2.4rem); margin: 0 0 6px; padding-right: 40px; }
+.pmodal__desc { color: var(--dim); margin: 0 0 26px; }
+
+.pgroup { margin-bottom: 24px; }
+.pgroup__name { font-family: var(--m); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--blood); margin-bottom: 12px; }
+.pgroup__hint { color: var(--faint); }
+.pgroup__opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.popt { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-family: var(--b); font-size: .92rem; cursor: pointer; border-radius: 2px; transition: border-color .25s, background .25s, color .25s; }
+.popt i { font-style: normal; font-family: var(--m); font-size: .76rem; color: var(--faint); }
+.popt:hover { border-color: var(--ink); }
+.popt--on { border-color: var(--blood); background: rgba(192,31,51,.12); color: #fff; }
+.popt--on i { color: var(--ink); }
+
+.pmodal__foot { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.pmodal__qty { display: flex; align-items: center; gap: 6px; }
+.pmodal__qty button { width: 36px; height: 36px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; border-radius: 2px; font-family: var(--m); font-size: 1rem; }
+.pmodal__qty button:hover { border-color: var(--blood); }
+.pmodal__qty span { min-width: 28px; text-align: center; font-family: var(--m); }
+.pmodal__foot .btn { flex: 1; }
+
+@media (max-width: 760px) {
+  .ctr__bases { grid-template-columns: 1fr 1fr; }
+  .bcard__desc { display: none; }
+  .citem__name { font-size: .86rem; }
+  .pmodal__inner { max-height: 92vh; }
+}

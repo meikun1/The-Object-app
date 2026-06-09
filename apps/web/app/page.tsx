@@ -396,19 +396,17 @@ export default function Page() {
               </div>
             </div>
             <div className="map" data-reveal data-delay="2">
+              {/* mode=search + ol=biz + oid → Я.Карта ставит свой родной pin
+                  организации; по тапу открывается карточка с кнопкой «Маршрут».
+                  text= оставлен фолбэком на случай, если widget не подхватит oid. */}
               <iframe
-                src="https://yandex.ru/map-widget/v1/?ll=&z=17&pt=&text=%D1%83%D0%BB.%20%D0%90%D0%B4%D0%BC%D0%B8%D1%80%D0%B0%D0%BB%D1%8C%D1%81%D0%BA%D0%BE%D0%B3%D0%BE%2037%D0%B0&l=map"
-                title="Карта · ул. Адмиральского, 37а"
+                src="https://yandex.ru/map-widget/v1/?mode=search&ol=biz&oid=58828646557&text=%D0%9E%D0%B1%D1%8A%D0%B5%D0%BA%D1%82%20%D0%90%D0%B4%D0%BC%D0%B8%D1%80%D0%B0%D0%BB%D1%8C%D1%81%D0%BA%D0%BE%D0%B3%D0%BE%2037%D0%B0&z=17&l=map"
+                title="Объект · карта"
                 loading="lazy"
                 allow="geolocation"
               />
-              {/* Поверх iframe — собственный pin с пульсом, гарантированно указывает на заведение */}
-              <div className="map-pin" aria-hidden="true">
-                <span className="map-pin__dot" />
-                <span className="map-pin__lbl">The Object</span>
-              </div>
-              <a className="map-open" href="https://yandex.ru/maps/org/obyekt/58828646557/" target="_blank" rel="noopener">
-                Открыть в Яндекс.Картах ↗
+              <a className="map-open" href="https://yandex.ru/maps/org/obyekt/58828646557/?mode=routes&rtt=auto" target="_blank" rel="noopener">
+                Построить маршрут ↗
               </a>
             </div>
           </div>

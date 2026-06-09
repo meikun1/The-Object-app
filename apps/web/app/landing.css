@@ -636,8 +636,7 @@ body.age-locked { overflow: hidden; }
 .landing .map iframe {
   position: absolute; inset: 0; width: 100%; height: 100%;
   border: 0;
-  /* Слегка приглушаем яркость и красноту яндекс-карт, чтобы карта дружила с золотой палитрой */
-  filter: grayscale(.25) brightness(.86) contrast(1.05);
+  /* Без filter — родной красный pin Я.Карты должен быть чётко виден */
 }
 .landing .map-open {
   position: absolute; right: 14px; bottom: 14px; z-index: 3;
@@ -649,31 +648,9 @@ body.age-locked { overflow: hidden; }
 }
 .landing .map-open:hover { background: var(--accent); color: var(--bg); }
 
-/* Pin поверх iframe — заведение всегда отмечено, даже если Яндекс не вернул маркер */
-.landing .map-pin {
-  position: absolute; left: 50%; top: 46%; transform: translate(-50%, -100%);
-  z-index: 2; pointer-events: none; text-align: center;
-}
-.landing .map-pin__dot {
-  display: block; width: 20px; height: 20px; border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 6px rgba(203,163,90,.20), 0 0 30px 6px rgba(203,163,90,.5);
-  margin: 0 auto;
-  animation: mapPulse 2.4s ease-out infinite;
-}
-.landing .map-pin__lbl {
-  display: inline-block; margin-top: 10px;
-  background: rgba(15,11,8,.92); border: 1px solid var(--accent);
-  padding: 6px 12px; border-radius: 3px;
-  font-family: var(--body); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--accent-2); white-space: nowrap;
-  backdrop-filter: blur(8px);
-}
-@keyframes mapPulse {
-  0%   { box-shadow: 0 0 0 6px rgba(203,163,90,.20), 0 0 0 0 rgba(203,163,90,.5); }
-  70%  { box-shadow: 0 0 0 6px rgba(203,163,90,.20), 0 0 0 26px rgba(203,163,90,0); }
-  100% { box-shadow: 0 0 0 6px rgba(203,163,90,.20), 0 0 0 0 rgba(203,163,90,0); }
-}
+/* (custom pin overlay убран — теперь Я.Карта рисует свой родной pin
+   через mode=search + oid организации, по тапу открывается карточка
+   с кнопкой «Построить маршрут».) */
 .landing .reviews-more { display: flex; justify-content: center; margin-top: 36px; }
 
 /* большой CTA-блок отзывов вместо фейковых карточек */

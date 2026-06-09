@@ -93,11 +93,27 @@ export default function PrintQrPage() {
           const q = qrs[t.id];
           return (
             <article className="qrcard" key={t.id}>
-              <div className="qrcard__hairline" />
-              <div className="qrcard__brand">
-                <img className="qrcard__logoTop" src="/img/object-logo.svg" alt="THE OBJECT" />
+              {/* угловые золотые скобки */}
+              <span className="qrcard__corner qrcard__corner--tl" aria-hidden="true" />
+              <span className="qrcard__corner qrcard__corner--tr" aria-hidden="true" />
+              <span className="qrcard__corner qrcard__corner--bl" aria-hidden="true" />
+              <span className="qrcard__corner qrcard__corner--br" aria-hidden="true" />
+
+              <div className="qrcard__top">
+                <span className="qrcard__est">Est. 2025</span>
+                <span className="qrcard__age">18+</span>
               </div>
-              <p className="qrcard__hint">Отсканируйте, чтобы собрать заказ</p>
+
+              <img className="qrcard__logoTop" src="/img/object-logo.svg" alt="THE OBJECT" />
+
+              <div className="qrcard__sep">
+                <span className="qrcard__sepLine" />
+                <span className="qrcard__sepDiamond">✦</span>
+                <span className="qrcard__sepLine" />
+              </div>
+
+              <p className="qrcard__hint">Сканируйте камерой<br />чтобы собрать заказ</p>
+
               {q ? (
                 <div className="qrcard__qrwrap">
                   <img className="qrcard__qr" src={q.png} alt={`QR — ${t.label}`} />
@@ -106,12 +122,24 @@ export default function PrintQrPage() {
               ) : (
                 <div className="qrcard__qr qrcard__qr--loading">…</div>
               )}
+
               <div className="qrcard__label">
                 <b>{t.label}</b>
                 {t.kind === 'VIP' && <span className="qrcard__vip">VIP</span>}
               </div>
+
+              <div className="qrcard__sep">
+                <span className="qrcard__sepLine" />
+                <span className="qrcard__sepDot" />
+                <span className="qrcard__sepLine" />
+              </div>
+
+              <div className="qrcard__info">
+                <p className="qrcard__addr">ул. Адмиральского, 37а</p>
+                <p className="qrcard__phone">+7 (900) 333-30-26</p>
+              </div>
+
               <p className="qrcard__leg">Меню за столом · оплата у бармена</p>
-              <div className="qrcard__hairline qrcard__hairline--b" />
             </article>
           );
         })}

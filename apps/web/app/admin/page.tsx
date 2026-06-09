@@ -678,9 +678,33 @@ function QrModal({ table, token, onClose }: { table: TableRow; token: string; on
         <h3 className="qrmodal__title">{table.label}</h3>
         {err && <p className="adm__msg adm__msg--err">{err}</p>}
         {png && (
-          <div className="qrmodal__qr">
-            <img className="qrmodal__img" src={png} alt={`QR-код для ${table.label}`} />
-            <img className="qrmodal__logo" src="/img/object-logo.svg" alt="THE OBJECT" />
+          <div className="qrmodal__card">
+            <span className="qrmodal__corner qrmodal__corner--tl" />
+            <span className="qrmodal__corner qrmodal__corner--tr" />
+            <span className="qrmodal__corner qrmodal__corner--bl" />
+            <span className="qrmodal__corner qrmodal__corner--br" />
+
+            <div className="qrmodal__top">
+              <span className="qrmodal__est">Est. 2025</span>
+              <span className="qrmodal__age">18+</span>
+            </div>
+            <img className="qrmodal__logoTop" src="/img/object-logo.svg" alt="THE OBJECT" />
+            <div className="qrmodal__sep">
+              <span /><span className="qrmodal__diamond">✦</span><span />
+            </div>
+            <div className="qrmodal__qr">
+              <img className="qrmodal__img" src={png} alt={`QR — ${table.label}`} />
+              <img className="qrmodal__logo" src="/img/object-logo.svg" alt="" />
+            </div>
+            <div className="qrmodal__cardLabel">
+              <b>{table.label}</b>
+              {table.kind === 'VIP' && <span className="qrmodal__vip">VIP</span>}
+            </div>
+            <div className="qrmodal__info">
+              <p>ул. Адмиральского, 37а</p>
+              <p>+7 (900) 333-30-26</p>
+            </div>
+            <p className="qrmodal__leg">Меню за столом · оплата у бармена</p>
           </div>
         )}
         {url && (

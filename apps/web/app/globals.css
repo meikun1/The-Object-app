@@ -335,17 +335,76 @@ a { color: inherit; text-decoration: none; }
 }
 .qrmodal__close:hover { background: var(--blood); border-color: var(--blood); color: #fff; }
 .qrmodal__title { font-family: var(--d); font-weight: 400; font-size: 1.6rem; margin: 0 0 16px; }
-.qrmodal__qr {
-  position: relative; display: inline-block; margin: 0 auto 16px;
-  width: 100%; max-width: 320px; background: #f1e9da;
-  border: 1px solid var(--line); padding: 14px;
+/* Premium-карточка QR в модалке /admin (зеркалит print-вариант) */
+.qrmodal__card {
+  position: relative; margin: 0 auto 16px; max-width: 340px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(203,163,90,.07), transparent 60%),
+    linear-gradient(180deg, #faf6ec 0%, #f4ecd9 100%);
+  border: 1px solid #cba35a; border-radius: 8px;
+  padding: 28px 20px 20px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
-.qrmodal__img { display: block; width: 100%; height: auto; background: transparent; }
+.qrmodal__corner {
+  position: absolute; width: 18px; height: 18px;
+  border-color: #cba35a; border-style: solid; pointer-events: none;
+}
+.qrmodal__corner--tl { top: 7px; left: 7px;     border-width: 1px 0 0 1px; }
+.qrmodal__corner--tr { top: 7px; right: 7px;    border-width: 1px 1px 0 0; }
+.qrmodal__corner--bl { bottom: 7px; left: 7px;  border-width: 0 0 1px 1px; }
+.qrmodal__corner--br { bottom: 7px; right: 7px; border-width: 0 1px 1px 0; }
+.qrmodal__top {
+  display: flex; justify-content: space-between; width: 100%;
+  font-family: var(--b); font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+  color: #8a6d2f; margin-bottom: 4px;
+}
+.qrmodal__age {
+  border: 1px solid #cba35a; padding: 2px 8px; border-radius: 30px;
+  color: #cba35a;
+}
+.qrmodal__logoTop {
+  width: 75%; max-width: 220px; height: auto;
+  filter: invert(.8) sepia(.4) saturate(2) hue-rotate(-15deg) brightness(.6);
+}
+.qrmodal__sep {
+  display: flex; align-items: center; gap: 8px; width: 75%; margin: 4px 0;
+}
+.qrmodal__sep span:not(.qrmodal__diamond) {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, #cba35a, transparent);
+}
+.qrmodal__diamond { color: #cba35a; font-size: 11px; line-height: 1; }
+.qrmodal__qr {
+  position: relative; display: inline-block;
+  padding: 12px; background: #f1e9da;
+  border: 1px solid #cba35a; border-radius: 4px;
+}
+.qrmodal__img { display: block; width: 240px; height: 240px; background: transparent; }
 .qrmodal__logo {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: 28%; height: auto;
+  width: 64px; height: auto;
   background: #f1e9da; padding: 4px 8px; border-radius: 4px;
-  /* Лого перекрывает ~20% центра — H-уровень коррекции (~30%) даёт запас на чтение */
+  filter: invert(.8) sepia(.4) saturate(2) hue-rotate(-15deg) brightness(.6);
+}
+.qrmodal__cardLabel {
+  margin-top: 4px;
+  font-family: var(--d); font-size: 26px; font-weight: 400; color: #15110c;
+  display: inline-flex; align-items: baseline; gap: 10px;
+}
+.qrmodal__cardLabel b { font-weight: 400; }
+.qrmodal__vip {
+  font-family: var(--b); font-size: 10.5px; letter-spacing: .18em;
+  background: #cba35a; color: #15110c; padding: 3px 9px; border-radius: 30px;
+}
+.qrmodal__info { font-family: var(--d); color: #4a3f2a; }
+.qrmodal__info p { margin: 0; font-size: 13.5px; font-style: italic; }
+.qrmodal__info p + p {
+  font-family: var(--b); font-size: 12px !important; letter-spacing: .04em;
+  color: #645b4e !important; font-style: normal !important; margin-top: 2px;
+}
+.qrmodal__leg {
+  font-family: var(--b); font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase;
+  color: #8a6d2f; margin: 4px 0 0;
 }
 .qrmodal__url { font-family: var(--m); font-size: .72rem; word-break: break-all; color: var(--dim); margin: 0 0 18px; }
 .qrmodal__url a { color: var(--dim); }
@@ -532,74 +591,117 @@ a { color: inherit; text-decoration: none; }
   display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
 }
 
+/* Печатная карточка QR — премиум-стиль с золотыми уголками и орнаментами */
 .qrcard {
-  position: relative; background: #faf6ec; border: 1px solid #cba35a; border-radius: 8px;
-  padding: 26px 22px 22px; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  break-inside: avoid; box-shadow: 0 6px 18px -12px rgba(0,0,0,.25);
+  position: relative; background:
+    radial-gradient(120% 80% at 50% 0%, rgba(203,163,90,.05), transparent 60%),
+    linear-gradient(180deg, #faf6ec 0%, #f4ecd9 100%);
+  border: 1px solid #cba35a; border-radius: 8px;
+  padding: 32px 22px 24px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  break-inside: avoid; box-shadow: 0 6px 22px -14px rgba(0,0,0,.3);
 }
-.qrcard__hairline {
-  width: 70%; height: 1px; background: linear-gradient(90deg, transparent, #cba35a, transparent);
-  margin-bottom: 4px;
+.qrcard__corner {
+  position: absolute; width: 22px; height: 22px;
+  border-color: #cba35a; border-style: solid; pointer-events: none;
 }
-.qrcard__hairline--b { margin: 8px 0 0; }
-.qrcard__brand { display: flex; align-items: center; justify-content: center; }
-.qrcard__logoTop { width: 65%; max-width: 220px; height: auto; filter: invert(.8) sepia(.4) saturate(2) hue-rotate(-15deg) brightness(.6); }
+.qrcard__corner--tl { top: 8px; left: 8px;     border-width: 1px 0 0 1px; }
+.qrcard__corner--tr { top: 8px; right: 8px;    border-width: 1px 1px 0 0; }
+.qrcard__corner--bl { bottom: 8px; left: 8px;  border-width: 0 0 1px 1px; }
+.qrcard__corner--br { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+
+.qrcard__top {
+  display: flex; justify-content: space-between; width: 100%;
+  font-family: var(--b); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase;
+  color: #8a6d2f; margin-bottom: 6px;
+}
+.qrcard__est { color: #8a6d2f; }
+.qrcard__age {
+  border: 1px solid #cba35a; padding: 2px 8px; border-radius: 30px;
+  color: #cba35a; letter-spacing: .14em;
+}
+
+.qrcard__logoTop {
+  width: 70%; max-width: 240px; height: auto;
+  filter: invert(.8) sepia(.4) saturate(2) hue-rotate(-15deg) brightness(.6);
+}
+
+.qrcard__sep {
+  display: flex; align-items: center; gap: 10px; width: 75%; margin: 6px 0;
+}
+.qrcard__sepLine {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, #cba35a, transparent);
+}
+.qrcard__sepDiamond {
+  color: #cba35a; font-size: 11px; line-height: 1;
+}
+.qrcard__sepDot {
+  width: 4px; height: 4px; background: #cba35a; border-radius: 50%;
+}
+
 .qrcard__hint {
-  font-family: var(--b); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
-  color: #8c8170; margin: 4px 0 6px;
+  font-family: var(--b); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: #8c8170; margin: 4px 0 8px; line-height: 1.5;
 }
+
 .qrcard__qrwrap {
   position: relative; display: inline-block;
   padding: 12px; background: #f1e9da;
-  border: 1px solid #cba35a;
+  border: 1px solid #cba35a; border-radius: 4px;
 }
-.qrcard__qr {
-  width: 220px; height: 220px; display: block;
-  background: transparent;
-}
+.qrcard__qr { width: 220px; height: 220px; display: block; background: transparent; }
 .qrcard__qr--loading {
   display: grid; place-items: center; color: #8c8170; font-size: 32px;
   width: 220px; height: 220px;
 }
 .qrcard__logoMid {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: 60px; height: auto;
-  background: #f1e9da; padding: 6px 8px; border-radius: 4px;
+  width: 64px; height: auto;
+  background: #f1e9da; padding: 4px 8px; border-radius: 4px;
   filter: invert(.8) sepia(.4) saturate(2) hue-rotate(-15deg) brightness(.6);
 }
+
 .qrcard__label {
   margin-top: 6px;
-  font-family: var(--d); font-size: 28px; font-weight: 400; color: #15110c;
+  font-family: var(--d); font-size: 30px; font-weight: 400; color: #15110c;
   display: inline-flex; align-items: baseline; gap: 10px;
 }
 .qrcard__label b { font-weight: 400; }
 .qrcard__vip {
-  font-family: var(--b); font-size: 11px; letter-spacing: .18em;
-  background: #cba35a; color: #15110c; padding: 2px 8px; border-radius: 30px;
+  font-family: var(--b); font-size: 10.5px; letter-spacing: .18em;
+  background: #cba35a; color: #15110c; padding: 3px 9px; border-radius: 30px;
 }
+
+.qrcard__info {
+  font-family: var(--d); color: #4a3f2a; margin: 4px 0 0;
+  line-height: 1.5;
+}
+.qrcard__info p { margin: 0; font-size: 14.5px; }
+.qrcard__addr { font-style: italic; }
+.qrcard__phone { font-family: var(--b); font-size: 12.5px !important; letter-spacing: .04em; color: #645b4e !important; margin-top: 2px !important; }
+
 .qrcard__leg {
-  font-family: var(--b); font-size: 11px; letter-spacing: .08em; color: #8c8170;
-  margin: 4px 0 0;
+  font-family: var(--b); font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase;
+  color: #8a6d2f; margin: 6px 0 0;
 }
 
 /* Print rules ============== */
 @media print {
-  @page { size: A4; margin: 12mm 10mm; }
+  @page { size: A4; margin: 10mm 8mm; }
   body { background: #fff !important; }
   .no-print { display: none !important; }
   .printqr { background: #fff; padding: 0; }
-  .printqr__sheet { max-width: none; gap: 8mm; grid-template-columns: 1fr 1fr; }
+  .printqr__sheet { max-width: none; gap: 6mm; grid-template-columns: 1fr 1fr; }
   .qrcard {
-    border-color: #999;
-    /* 4 на лист A4: ~95×130 мм каждая, с заметным отступом */
-    padding: 8mm 6mm;
+    padding: 7mm 6mm 6mm;
     page-break-inside: avoid;
   }
-  .qrcard__qr { width: 60mm; height: 60mm; }
-  .qrcard__logoMid { width: 16mm; }
-  .qrcard__brand, .qrcard__hint, .qrcard__label, .qrcard__leg { color: #15110c !important; }
-  .qrcard__hairline { background: linear-gradient(90deg, transparent, #cba35a, transparent) !important; }
+  .qrcard__qr { width: 56mm; height: 56mm; }
+  .qrcard__logoMid { width: 15mm; }
+  .qrcard__corner { width: 5mm; height: 5mm; }
+  .qrcard__top, .qrcard__hint, .qrcard__label, .qrcard__leg, .qrcard__info { color: #15110c !important; }
+  .qrcard__addr { font-style: italic !important; }
 }
 
 /* Статистика в админке */

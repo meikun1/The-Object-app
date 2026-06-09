@@ -49,13 +49,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, delivered: false });
   }
 
-  const tg = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
-  });
+  let tg: Response;
+  try {
+    tg = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
+    });
+  } catch (err) {
+    console.error('booking: fetch to Telegram failed', err);
+    return NextResponse.json({ error: 'telegram unreachable' }, { status: 502 });
+  }
+
+  // Telegram отвечает {"ok":false,"error_code":...,"description":"..."}
+  // Логируем тело целиком — иначе невозможно отличить «бот заблокирован»
+  // от «неверный chat_id» в Vercel Logs.
+  const respText = await tg.text();
   if (!tg.ok) {
-    return NextResponse.json({ error: 'telegram error' }, { status: 502 });
+    console.error(`booking: Telegram ${tg.status} — ${respText}`);
+    return NextResponse.json(
+      { error: 'telegram error', status: tg.status, body: respText },
+      { status: 502 },
+    );
   }
   return NextResponse.json({ ok: true, delivered: true });
 }

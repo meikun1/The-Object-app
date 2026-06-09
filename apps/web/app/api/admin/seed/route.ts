@@ -18,6 +18,20 @@ export async function POST(req: Request) {
   if (got !== expected) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
+  try {
+    return await runSeed();
+  } catch (e: any) {
+    console.error('seed failed', e);
+    const msg = String(e?.message ?? e);
+    let hint = '';
+    if (/column .* does not exist/i.test(msg) || /category|defaultSelected/.test(msg)) {
+      hint = ' Похоже, новая миграция ещё не накатана на Neon. Выполните в Neon SQL Editor: ALTER TABLE "Base" ADD COLUMN "category" TEXT; ALTER TABLE "Modifier" ADD COLUMN "defaultSelected" BOOLEAN NOT NULL DEFAULT false;';
+    }
+    return NextResponse.json({ error: msg + hint }, { status: 500 });
+  }
+}
+
+async function runSeed() {
 
   // --- Столы: 13 в зале + 2 VIP ---
   await prisma.table.deleteMany();

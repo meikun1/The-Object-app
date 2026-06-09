@@ -1,7 +1,7 @@
-// Гостевой конструктор. Token (пока) трактуется как ID стола.
-// В Этапе 3 добавим подписанные токены и серверные сессии.
-import { notFound } from 'next/navigation';
+// Гостевой конструктор. Токен в URL: `<tableId>.<sig>`. Подпись проверяется
+// HMAC-секретом стола; при сбросе стола секрет ротируется и старые QR умирают.
 import { prisma } from '@/lib/prisma';
+import { parseToken, verifyTable } from '@/lib/sign';
 import ConstructorClient from '@/components/ConstructorClient';
 
 type Props = { params: { token: string } };
@@ -9,17 +9,26 @@ type Props = { params: { token: string } };
 export const dynamic = 'force-dynamic';
 
 export default async function GuestPage({ params }: Props) {
-  const table = await prisma.table.findFirst({
-    where: { id: params.token, active: true },
-  });
+  const parsed = parseToken(params.token);
+  let table: { id: string; label: string } | null = null;
+
+  if (parsed) {
+    const t = await prisma.table.findFirst({
+      where: { id: parsed.tableId, active: true },
+    });
+    if (t && verifyTable(t.id, t.qrSecret, parsed.sig)) {
+      table = { id: t.id, label: t.label };
+    }
+  }
 
   if (!table) {
     return (
       <main className="wrap">
         <p className="eyebrow">THE OBJECT</p>
-        <h1>Стол не найден</h1>
+        <h1>Ссылка недействительна</h1>
         <p style={{ color: 'var(--dim)' }}>
-          Похоже, ссылка устарела или QR-код неверный. Позовите бармена.
+          QR-код устарел или ссылка неверная. Попросите бармена показать
+          актуальный QR-код вашего стола.
         </p>
         <div className="card">
           <a href="/" style={{ color: 'var(--blood)' }}>← На главную</a>
@@ -44,7 +53,6 @@ export default async function GuestPage({ params }: Props) {
     },
   });
 
-  // Prisma Decimal → string для сериализации в client component.
   const serialized = bases.map((b) => ({
     id: b.id,
     name: b.name,

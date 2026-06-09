@@ -488,3 +488,38 @@ a.cr__v:hover { color: var(--blood); }
 .adm__tile:hover { background: var(--blood); border-color: var(--blood); color: #fff; transform: translateY(-2px); }
 .adm__tile--vip { border-color: rgba(192,31,51,.35); color: var(--blood); }
 .adm__tile--vip:hover { color: #fff; }
+
+/* строки столов (с действиями QR / Сброс) */
+.adm__rows { display: flex; flex-direction: column; gap: 6px; }
+.trow {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border: 1px solid var(--line); background: rgba(255,255,255,.015);
+  transition: border-color .25s, background .25s;
+}
+.trow:hover { border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.03); }
+.trow--vip { border-color: rgba(192,31,51,.3); }
+.trow__label { font-family: var(--d); font-size: 1.05rem; }
+.trow--vip .trow__label { color: var(--blood); }
+.trow__act { display: flex; gap: 6px; }
+.trow__btn {
+  font-family: var(--m); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase;
+  background: transparent; border: 1px solid var(--line); color: var(--ink);
+  padding: 9px 14px; border-radius: 2px; cursor: pointer; min-width: 64px;
+  transition: background .25s, color .25s, border-color .25s;
+}
+.trow__btn:hover { border-color: var(--ink); }
+.trow__btn--danger { color: var(--blood); border-color: rgba(192,31,51,.35); }
+.trow__btn--danger:hover { background: var(--blood); color: #fff; border-color: var(--blood); }
+.trow__btn:disabled { opacity: .5; cursor: progress; }
+
+/* QR-модалка */
+.qrmodal { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.7); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; }
+.qrmodal__inner { position: relative; width: 100%; max-width: 420px; background: var(--void-2); border: 1px solid var(--line); padding: clamp(24px, 4vw, 36px); text-align: center; }
+.qrmodal__close { position: absolute; top: 10px; right: 12px; background: none; border: none; color: var(--dim); font-size: 1.3rem; cursor: pointer; padding: 8px; }
+.qrmodal__close:hover { color: var(--blood); }
+.qrmodal__title { font-family: var(--d); font-weight: 400; font-size: 1.6rem; margin: 0 0 16px; }
+.qrmodal__img { display: block; width: 100%; max-width: 320px; margin: 0 auto 16px; background: #fff; border: 1px solid var(--line); }
+.qrmodal__url { font-family: var(--m); font-size: .72rem; word-break: break-all; color: var(--dim); margin: 0 0 18px; }
+.qrmodal__url a { color: var(--dim); }
+.qrmodal__url a:hover { color: var(--blood); }
+.qrmodal .adm__btn { width: 100%; text-decoration: none; }

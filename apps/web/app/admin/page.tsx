@@ -1,7 +1,7 @@
 'use client';
-// Админка. Вход — единоразовый ввод ADMIN_ACCESS_TOKEN, дальше хранится
-// в localStorage этого браузера. Действия (засевка и т.п.) шлются с
-// заголовком x-admin-token. Этап 6 — полноценная админка.
+// Админка. Этап 3: подписанные QR-коды на каждом столе + сброс стола
+// (закрытие сессии и ротация секрета — старые QR умирают).
+// Вход — единоразовый ввод ADMIN_ACCESS_TOKEN (сохраняется в localStorage).
 import { useEffect, useState } from 'react';
 
 type TableRow = { id: string; label: string; kind: string };
@@ -9,7 +9,6 @@ type TableRow = { id: string; label: string; kind: string };
 const STORAGE_KEY = 'object_admin_token';
 
 export default function AdminPage() {
-  // null = ещё не проверили localStorage; '' = разлогинен; string = вошёл.
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -17,9 +16,7 @@ export default function AdminPage() {
     setToken(t);
   }, []);
 
-  if (token === null) {
-    return <main className="adm" />;
-  }
+  if (token === null) return <main className="adm" />;
   if (!token) {
     return <Login onLogged={(t) => { localStorage.setItem(STORAGE_KEY, t); setToken(t); }} />;
   }
@@ -47,17 +44,14 @@ function Login({ onLogged }: { onLogged: (token: string) => void }) {
         method: 'POST',
         headers: { 'x-admin-token': t },
       });
-      if (res.ok) {
-        onLogged(t);
-      } else {
+      if (res.ok) onLogged(t);
+      else {
         const j = await res.json().catch(() => ({}));
         setErr(j.error === 'forbidden' ? 'Неверный токен' : (j.error ?? `Ошибка ${res.status}`));
       }
     } catch (e: any) {
       setErr(`Сеть: ${String(e?.message ?? e)}`);
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   };
 
   return (
@@ -96,6 +90,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const [error, setError] = useState<string | null>(null);
   const [seedMsg, setSeedMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [seeding, setSeeding] = useState(false);
+  const [qrFor, setQrFor] = useState<TableRow | null>(null);
 
   const load = () => {
     fetch('/api/tables')
@@ -124,9 +119,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       }
     } catch (e: any) {
       setSeedMsg({ ok: false, text: `Сеть: ${String(e?.message ?? e)}` });
-    } finally {
-      setSeeding(false);
-    }
+    } finally { setSeeding(false); }
   };
 
   const hall = tables.filter((t) => t.kind !== 'VIP');
@@ -167,31 +160,20 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         ) : (
           <>
             <p className="adm__note">
-              Тыкните на стол — это гостевой конструктор за этим столом.
-              В Этапе 3 ссылки станут подписанными (нельзя угадать чужой стол).
+              Тыкните на стол — это гостевой конструктор по подписанной QR-ссылке.
+              «QR» — показать код для печати. «Сброс» — закрыть текущую сессию
+              стола и сделать все старые QR недействительными.
             </p>
             {hall.length > 0 && (
               <>
                 <h3 className="adm__group">Зал</h3>
-                <div className="adm__tables">
-                  {hall.map((t) => (
-                    <a key={t.id} href={`/t/${t.id}`} className="adm__tile">
-                      {t.label}
-                    </a>
-                  ))}
-                </div>
+                <TableGrid items={hall} onQr={(t) => setQrFor(t)} token={token} onChanged={load} />
               </>
             )}
             {vip.length > 0 && (
               <>
                 <h3 className="adm__group">VIP</h3>
-                <div className="adm__tables">
-                  {vip.map((t) => (
-                    <a key={t.id} href={`/t/${t.id}`} className="adm__tile adm__tile--vip">
-                      {t.label}
-                    </a>
-                  ))}
-                </div>
+                <TableGrid items={vip} onQr={(t) => setQrFor(t)} token={token} onChanged={load} vip />
               </>
             )}
           </>
@@ -199,8 +181,100 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       </section>
 
       <section className="adm__card adm__card--muted">
-        Здесь появятся редактор меню, генерация QR-кодов, смены, аудит. Этап 6.
+        Здесь появятся редактор меню, смены, аудит. Этап 6.
       </section>
+
+      {qrFor && <QrModal table={qrFor} token={token} onClose={() => setQrFor(null)} />}
     </main>
+  );
+}
+
+/* ===== плитка столов ===== */
+function TableGrid({
+  items, onQr, token, onChanged, vip,
+}: {
+  items: TableRow[];
+  onQr: (t: TableRow) => void;
+  token: string;
+  onChanged: () => void;
+  vip?: boolean;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const reset = async (t: TableRow) => {
+    if (!window.confirm(`Сбросить ${t.label}? Старые QR-коды этого стола перестанут работать.`)) return;
+    setBusy(t.id);
+    try {
+      const res = await fetch(`/api/admin/tables/${t.id}/reset`, {
+        method: 'POST',
+        headers: { 'x-admin-token': token },
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        alert(`Ошибка: ${j.error ?? res.status}`);
+      } else {
+        onChanged();
+      }
+    } catch (e: any) {
+      alert(`Сеть: ${String(e?.message ?? e)}`);
+    } finally { setBusy(null); }
+  };
+
+  return (
+    <div className="adm__rows">
+      {items.map((t) => (
+        <div key={t.id} className={`trow${vip ? ' trow--vip' : ''}`}>
+          <span className="trow__label">{t.label}</span>
+          <div className="trow__act">
+            <button className="trow__btn" onClick={() => onQr(t)}>QR</button>
+            <button
+              className="trow__btn trow__btn--danger"
+              onClick={() => reset(t)}
+              disabled={busy === t.id}
+            >
+              {busy === t.id ? '…' : 'Сброс'}
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ===== модалка QR ===== */
+function QrModal({ table, token, onClose }: { table: TableRow; token: string; onClose: () => void }) {
+  const [png, setPng] = useState<string | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/admin/tables/${table.id}/qr`, { headers: { 'x-admin-token': token } })
+      .then(async (r) => {
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error ?? `Ошибка ${r.status}`);
+        setPng(j.png); setUrl(j.url);
+      })
+      .catch((e) => setErr(String(e?.message ?? e)));
+  }, [table.id, token]);
+
+  return (
+    <div className="qrmodal" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="qrmodal__inner">
+        <button className="qrmodal__close" onClick={onClose} aria-label="Закрыть">✕</button>
+        <h3 className="qrmodal__title">{table.label}</h3>
+        {err && <p className="adm__msg adm__msg--err">{err}</p>}
+        {png && <img className="qrmodal__img" src={png} alt={`QR-код для ${table.label}`} />}
+        {url && (
+          <p className="qrmodal__url">
+            <a href={url} target="_blank" rel="noopener">{url}</a>
+          </p>
+        )}
+        {png && (
+          <a className="adm__btn" href={png} download={`qr-${table.label}.png`}>
+            Скачать PNG
+          </a>
+        )}
+      </div>
+    </div>
   );
 }

@@ -421,3 +421,45 @@ a.cr__v:hover { color: var(--blood); }
   .citem__name { font-size: .86rem; }
   .pmodal__inner { max-height: 92vh; }
 }
+
+/* ============================================================
+   АДМИНКА /admin
+   ============================================================ */
+.adm { max-width: 920px; margin: 0 auto; padding: clamp(80px, 13vw, 130px) var(--pad) clamp(60px, 8vw, 100px); position: relative; z-index: 2; }
+.adm__head { margin-bottom: clamp(24px, 4vw, 40px); }
+.adm__title { font-family: var(--d); font-weight: 400; font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1; margin: 8px 0 0; }
+
+.adm__card { border: 1px solid var(--line); background: var(--void-2); padding: clamp(22px, 2.6vw, 30px); margin-top: 16px; position: relative; }
+.adm__card--err { border-color: var(--blood-d); color: var(--blood); font-family: var(--m); font-size: .88rem; }
+.adm__card--muted { color: var(--faint); font-family: var(--m); font-size: .82rem; letter-spacing: .04em; }
+
+.adm__h2 { font-family: var(--d); font-weight: 400; font-size: clamp(1.3rem, 2.2vw, 1.6rem); margin: 0 0 10px; }
+.adm__note { color: var(--dim); font-size: .9rem; margin: 0 0 18px; max-width: 56ch; }
+
+.adm__btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--m); font-size: .76rem; letter-spacing: .14em; text-transform: uppercase;
+  padding: 14px 28px; border-radius: 2px; cursor: pointer;
+  background: var(--blood); color: #fff; border: 1px solid var(--blood);
+  transition: background .25s, transform .25s var(--ease), opacity .25s;
+}
+.adm__btn:hover { background: var(--blood-d); border-color: var(--blood-d); }
+.adm__btn:active { transform: translateY(1px); }
+.adm__btn:disabled, .adm__btn--busy { opacity: .55; cursor: progress; }
+
+.adm__msg { margin-top: 14px; font-family: var(--m); font-size: .82rem; }
+.adm__msg--ok { color: #4ade80; }
+.adm__msg--err { color: var(--blood); }
+
+.adm__group { font-family: var(--m); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); margin: 22px 0 12px; }
+.adm__tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.adm__tile {
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px 8px; border: 1px solid var(--line);
+  font-family: var(--d); font-size: 1.05rem; color: var(--ink);
+  background: rgba(255,255,255,.015); text-align: center;
+  transition: background .25s, border-color .25s, color .25s, transform .25s var(--ease);
+}
+.adm__tile:hover { background: var(--blood); border-color: var(--blood); color: #fff; transform: translateY(-2px); }
+.adm__tile--vip { border-color: rgba(192,31,51,.35); color: var(--blood); }
+.adm__tile--vip:hover { color: #fff; }

@@ -1,6 +1,6 @@
-// Админка. Пока — таблица столов с прямыми ссылками /t/[id] для теста +
-// кнопка разовой засевки демо-данными. Этап 6 — полноценная админка.
 'use client';
+// Админка. Пока — таблица столов + кнопка разовой засевки демо-данными.
+// Этап 6 — полноценная админка (меню, QR, смены, аудит).
 import { useEffect, useState } from 'react';
 
 type TableRow = { id: string; label: string; kind: string };
@@ -8,7 +8,7 @@ type TableRow = { id: string; label: string; kind: string };
 export default function AdminPage() {
   const [tables, setTables] = useState<TableRow[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [seedMsg, setSeedMsg] = useState<string | null>(null);
+  const [seedMsg, setSeedMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [seeding, setSeeding] = useState(false);
 
   const load = () => {
@@ -21,74 +21,102 @@ export default function AdminPage() {
   useEffect(load, []);
 
   const seed = async () => {
-    const token = window.prompt('Введите ADMIN_ACCESS_TOKEN (из Vercel env)');
+    const token = window.prompt('Введите ADMIN_ACCESS_TOKEN (тот же, что в Vercel env):');
     if (!token) return;
     setSeeding(true);
     setSeedMsg(null);
     try {
       const res = await fetch('/api/admin/seed', {
         method: 'POST',
-        headers: { 'x-admin-token': token },
+        headers: { 'x-admin-token': token.trim() },
       });
       const j = await res.json();
       if (!res.ok) {
-        setSeedMsg(`Ошибка: ${j.error ?? res.status}`);
+        setSeedMsg({ ok: false, text: `Ошибка: ${j.error ?? res.status}` });
       } else {
-        setSeedMsg(`Готово: столов ${j.tables}, основ ${j.bases}.`);
+        setSeedMsg({ ok: true, text: `Готово: столов ${j.tables}, основ ${j.bases}.` });
         load();
       }
     } catch (e: any) {
-      setSeedMsg(`Сеть: ${String(e?.message ?? e)}`);
+      setSeedMsg({ ok: false, text: `Сеть: ${String(e?.message ?? e)}` });
     } finally {
       setSeeding(false);
     }
   };
 
+  const hall = tables.filter((t) => t.kind !== 'VIP');
+  const vip = tables.filter((t) => t.kind === 'VIP');
+
   return (
-    <main className="wrap">
-      <p className="eyebrow">THE OBJECT · Админка</p>
-      <h1>Столы</h1>
+    <main className="adm">
+      <header className="adm__head">
+        <p className="eyebrow">THE OBJECT · Админка</p>
+        <h1 className="adm__title">Столы</h1>
+      </header>
 
-      {error && <div className="card bad">Ошибка: {error}</div>}
+      {error && <div className="adm__card adm__card--err">Ошибка: {error}</div>}
 
-      <div className="card">
-        <button className="btn btn--line" onClick={seed} disabled={seeding}>
+      <section className="adm__card">
+        <h2 className="adm__h2">Засевка демо-данных</h2>
+        <p className="adm__note">
+          Создаёт 15 столов и 3 основы конструктора (Джин-тоник, Лимонад, Кофе).
+          Идемпотентна — повторный вызов перезаписывает меню.
+        </p>
+        <button
+          className={`adm__btn${seeding ? ' adm__btn--busy' : ''}`}
+          onClick={seed}
+          disabled={seeding}
+        >
           {seeding ? 'Заполняем…' : 'Засеять демо-данные'}
         </button>
         {seedMsg && (
-          <p style={{ marginTop: 12, fontFamily: 'var(--m)', fontSize: '.84rem', color: 'var(--dim)' }}>
-            {seedMsg}
+          <p className={`adm__msg ${seedMsg.ok ? 'adm__msg--ok' : 'adm__msg--err'}`}>
+            {seedMsg.text}
           </p>
         )}
-        <p style={{ color: 'var(--faint)', fontSize: '.8rem', marginTop: 8 }}>
-          Кнопка дёргает <code>POST /api/admin/seed</code> с заголовком
-          <code> x-admin-token</code>. Создаёт 15 столов и 3 основы конструктора.
-          Идемпотентна — старое меню/столы удаляются.
-        </p>
-      </div>
+      </section>
 
-      <div className="card">
-        <p style={{ color: 'var(--dim)', marginBottom: 14 }}>
-          Откройте ссылку — это гостевой конструктор за столом.
-          В Этапе 3 ссылки станут подписанными (нельзя угадать чужой стол).
-        </p>
-        <ul>
-          {tables.map((t) => (
-            <li key={t.id} style={{ marginBottom: 6 }}>
-              <a href={`/t/${t.id}`} style={{ color: 'var(--blood)' }}>
-                {t.label}
-              </a>{' '}
-              <span style={{ color: 'var(--dim)' }}>
-                — {t.kind === 'VIP' ? 'VIP-комната' : 'зал'}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <section className="adm__card">
+        <h2 className="adm__h2">{tables.length === 0 ? 'Пока пусто' : `Столы — ${tables.length}`}</h2>
+        {tables.length === 0 ? (
+          <p className="adm__note">Сначала нажмите «Засеять демо-данные».</p>
+        ) : (
+          <>
+            <p className="adm__note">
+              Тыкните на стол — это гостевой конструктор за этим столом.
+              В Этапе 3 ссылки станут подписанными (нельзя угадать чужой стол).
+            </p>
+            {hall.length > 0 && (
+              <>
+                <h3 className="adm__group">Зал</h3>
+                <div className="adm__tables">
+                  {hall.map((t) => (
+                    <a key={t.id} href={`/t/${t.id}`} className="adm__tile">
+                      {t.label}
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
+            {vip.length > 0 && (
+              <>
+                <h3 className="adm__group">VIP</h3>
+                <div className="adm__tables">
+                  {vip.map((t) => (
+                    <a key={t.id} href={`/t/${t.id}`} className="adm__tile adm__tile--vip">
+                      {t.label}
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </section>
 
-      <div className="card" style={{ color: 'var(--dim)' }}>
+      <section className="adm__card adm__card--muted">
         Здесь появятся редактор меню, генерация QR-кодов, смены, аудит. Этап 6.
-      </div>
+      </section>
     </main>
   );
 }

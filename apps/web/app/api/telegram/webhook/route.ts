@@ -1,19 +1,21 @@
 // Webhook Telegram-бота бармена.
-// Команды:
-//   /start          — приветствие + подсказка про /login
-//   /login ПАРОЛЬ   — авторизация (BOT_ACCESS_PASSWORD из env)
-//   /shift_on       — встать на смену
-//   /shift_off      — уйти со смены
-//   /me             — статус (авторизован / на смене)
-//
-// Callback queries: order:<orderId>:accept | order:<orderId>:reject
-//   Подтверждение/отклонение заказа со страницы /t/[token].
+// Команды: /start /login /shift_on /shift_off /me /orders /stats /help
+// Reply-клавиатура снизу — основные действия в одно касание.
+// Callback queries: order:<id>:accept | order:<id>:reject | order:<id>:ready
 //
 // Защита от подделок: проверяем заголовок X-Telegram-Bot-Api-Secret-Token,
 // если задан TELEGRAM_WEBHOOK_SECRET в env (выставлен при setWebhook).
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { answerCallbackQuery, editMessageText, esc, sendMessage } from '@/lib/telegram';
+import {
+  HELP_TEXT,
+  WELCOME_GUEST,
+  orderCard,
+  orderInlineKeyboard,
+  staffKeyboard,
+} from '@/lib/bot-ui';
+import type { Staff } from '@prisma/client';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
   if (wantSecret) {
     const got = req.headers.get('x-telegram-bot-api-secret-token');
     if (got !== wantSecret) {
-      return NextResponse.json({ ok: true }); // молча игнорируем подделку
+      return NextResponse.json({ ok: true });
     }
   }
 
@@ -55,95 +57,205 @@ async function handleMessage(m: TgMessage) {
   const tgUserId = m.from?.id;
   if (!tgUserId) return;
   const chatId = m.chat.id;
-  const text = (m.text ?? '').trim();
-  const fullName = [m.from?.first_name, m.from?.last_name].filter(Boolean).join(' ') || m.from?.username || `user_${tgUserId}`;
+  const raw = (m.text ?? '').trim();
+  const text = normalizeButtonText(raw);
+  const fullName = [m.from?.first_name, m.from?.last_name].filter(Boolean).join(' ')
+    || m.from?.username || `user_${tgUserId}`;
 
-  if (text === '/start' || text.startsWith('/start ')) {
-    await sendMessage(
-      chatId,
-      `<b>THE OBJECT</b> — бот бармена.\n\n` +
-        `Войдите, чтобы получать заказы:\n<code>/login ПАРОЛЬ</code>\n\n` +
-        `Пароль выдаёт администратор.`,
-    );
-    return;
-  }
-
-  if (text.startsWith('/login ')) {
-    const password = text.slice('/login '.length).trim();
-    const expected = process.env.BOT_ACCESS_PASSWORD;
-    if (!expected) {
-      await sendMessage(chatId, 'BOT_ACCESS_PASSWORD не настроен на сервере.');
-      return;
-    }
-    if (password !== expected) {
-      await sendMessage(chatId, 'Неверный пароль.');
-      return;
-    }
-    // Привязываем Telegram к записи Staff. Если у этого tgUserId уже есть
-    // запись — обновляем chatId и имя. Если нет — создаём BARMAN.
-    const existing = await prisma.staff.findUnique({ where: { tgUserId: BigInt(tgUserId) } });
-    if (existing) {
-      await prisma.staff.update({
-        where: { id: existing.id },
-        data: { chatId: BigInt(chatId), name: fullName, authorized: true, lastLoginAt: new Date() },
-      });
-    } else {
-      await prisma.staff.create({
-        data: {
-          name: fullName,
-          role: 'BARMAN',
-          tgUserId: BigInt(tgUserId),
-          chatId: BigInt(chatId),
-          authorized: true,
-          lastLoginAt: new Date(),
-        },
-      });
-    }
-    await prisma.auditLog.create({
-      data: { type: 'staff.login', message: `${fullName} вошёл`, meta: { tgUserId } },
-    });
-    await sendMessage(
-      chatId,
-      `Вы вошли как <b>${esc(fullName)}</b>.\n\n` +
-        `Команды:\n<code>/shift_on</code> — встать на смену\n` +
-        `<code>/shift_off</code> — уйти со смены\n<code>/me</code> — статус`,
-    );
-    return;
+  // /login доступен всегда — авторизация.
+  if (text.startsWith('/login')) {
+    return handleLogin(chatId, tgUserId, fullName, raw);
   }
 
   const staff = await prisma.staff.findUnique({ where: { tgUserId: BigInt(tgUserId) } });
+
+  // Не вошли — приветствуем и просим войти.
   if (!staff || !staff.authorized) {
-    if (text.startsWith('/')) {
+    if (text === '/start') {
+      await sendMessage(chatId, WELCOME_GUEST);
+    } else if (text === '/help') {
+      await sendMessage(chatId, WELCOME_GUEST);
+    } else if (text.startsWith('/')) {
       await sendMessage(chatId, 'Сначала войдите: <code>/login ПАРОЛЬ</code>');
     }
     return;
   }
 
-  // Поддерживаем chatId в актуальном состоянии — пользователь мог удалить чат и начать заново.
+  // chatId мог измениться — поддерживаем актуальным.
   if (staff.chatId !== BigInt(chatId)) {
     await prisma.staff.update({ where: { id: staff.id }, data: { chatId: BigInt(chatId) } });
+    staff.chatId = BigInt(chatId);
   }
 
-  if (text === '/shift_on') {
-    await prisma.staff.update({ where: { id: staff.id }, data: { onShift: true } });
-    await sendMessage(chatId, '✅ Вы на смене. Заказы будут приходить сюда.');
+  // === Маршрутизация команд / нажатий клавиатуры ===
+  switch (text) {
+    case '/start':
+    case '/menu':
+      return showMenu(chatId, staff);
+    case '/help':
+      return sendMessage(chatId, HELP_TEXT, { reply_markup: staffKeyboard(staff) });
+    case '/shift_on':
+      return toggleShift(chatId, staff, true);
+    case '/shift_off':
+      return toggleShift(chatId, staff, false);
+    case '/me':
+      return showMe(chatId, staff);
+    case '/orders':
+      return showActiveOrders(chatId, staff);
+    case '/stats':
+      return showStats(chatId, staff);
+    default:
+      if (raw.startsWith('/')) {
+        await sendMessage(chatId, 'Не понял команду. Откройте меню: /start', {
+          reply_markup: staffKeyboard(staff),
+        });
+      }
+  }
+}
+
+/** Маппинг текста с reply-клавиатуры в команды. */
+function normalizeButtonText(t: string): string {
+  switch (t) {
+    case '🟢 Встать на смену': return '/shift_on';
+    case '🔴 Уйти со смены':   return '/shift_off';
+    case '📋 Активные':        return '/orders';
+    case '📊 Моя смена':       return '/stats';
+    case 'ℹ️ Помощь':           return '/help';
+    default: return t;
+  }
+}
+
+/* ============================== ХЭНДЛЕРЫ ============================== */
+
+async function handleLogin(chatId: number, tgUserId: number, fullName: string, raw: string) {
+  const password = raw.replace(/^\/login(@\w+)?\s*/, '').trim();
+  const expected = process.env.BOT_ACCESS_PASSWORD;
+  if (!expected) {
+    await sendMessage(chatId, '⚠️ BOT_ACCESS_PASSWORD не настроен на сервере.');
     return;
   }
-  if (text === '/shift_off') {
-    await prisma.staff.update({ where: { id: staff.id }, data: { onShift: false } });
-    await sendMessage(chatId, '⏸ Смена окончена. Заказы пока не присылаем.');
+  if (!password) {
+    await sendMessage(chatId, 'Использование: <code>/login ПАРОЛЬ</code>');
     return;
   }
-  if (text === '/me') {
+  if (password !== expected) {
+    await sendMessage(chatId, '🚫 Неверный пароль.');
+    return;
+  }
+
+  const existing = await prisma.staff.findUnique({ where: { tgUserId: BigInt(tgUserId) } });
+  let staff: Staff;
+  if (existing) {
+    staff = await prisma.staff.update({
+      where: { id: existing.id },
+      data: { chatId: BigInt(chatId), name: fullName, authorized: true, lastLoginAt: new Date() },
+    });
+  } else {
+    staff = await prisma.staff.create({
+      data: {
+        name: fullName, role: 'BARMAN',
+        tgUserId: BigInt(tgUserId), chatId: BigInt(chatId),
+        authorized: true, lastLoginAt: new Date(),
+      },
+    });
+  }
+  await prisma.auditLog.create({
+    data: { type: 'staff.login', message: `${fullName} вошёл`, meta: { tgUserId } },
+  });
+
+  await sendMessage(
+    chatId,
+    `🎉 Вы вошли как <b>${esc(staff.name)}</b>.\n\n` +
+      `Нижняя клавиатура — основные действия. Команды: /help.`,
+    { reply_markup: staffKeyboard(staff) },
+  );
+}
+
+async function showMenu(chatId: number, staff: Staff) {
+  const head = `<b>THE OBJECT</b>\nЗдравствуйте, ${esc(staff.name)}.`;
+  const status = staff.onShift ? '🟢 Вы <b>на смене</b>' : '⏸ Смена выключена';
+  const hint = staff.onShift
+    ? 'Заказы будут приходить сюда автоматически.'
+    : 'Нажмите «🟢 Встать на смену», чтобы получать заказы.';
+  await sendMessage(chatId, `${head}\n${status}\n\n${hint}`, {
+    reply_markup: staffKeyboard(staff),
+  });
+}
+
+async function toggleShift(chatId: number, staff: Staff, on: boolean) {
+  if (staff.onShift === on) {
+    await sendMessage(chatId, on ? 'Вы уже на смене.' : 'Смена уже выключена.', {
+      reply_markup: staffKeyboard(staff),
+    });
+    return;
+  }
+  const upd = await prisma.staff.update({ where: { id: staff.id }, data: { onShift: on } });
+  const msg = on
+    ? '🟢 <b>Вы на смене.</b>\nЗаказы будут приходить сюда.'
+    : '⏸ <b>Смена окончена.</b>\nЗаказы пока не присылаем.';
+  await sendMessage(chatId, msg, { reply_markup: staffKeyboard(upd) });
+}
+
+async function showMe(chatId: number, staff: Staff) {
+  const lines = [
+    `<b>${esc(staff.name)}</b>`,
+    `Роль: ${staff.role === 'ADMIN' ? 'Администратор' : 'Бармен'}`,
+    `Смена: ${staff.onShift ? '🟢 на смене' : '⏸ выкл'}`,
+  ];
+  if (staff.lastLoginAt) {
+    lines.push(`Последний вход: ${fmtDateTime(staff.lastLoginAt)}`);
+  }
+  await sendMessage(chatId, lines.join('\n'), { reply_markup: staffKeyboard(staff) });
+}
+
+async function showActiveOrders(chatId: number, staff: Staff) {
+  const orders = await prisma.order.findMany({
+    where: { status: { in: ['PENDING', 'ACCEPTED'] } },
+    orderBy: { createdAt: 'asc' },
+    include: { items: true, session: { include: { table: true } } },
+    take: 15,
+  });
+  if (orders.length === 0) {
+    await sendMessage(chatId, '✨ Активных заказов нет.', {
+      reply_markup: staffKeyboard(staff),
+    });
+    return;
+  }
+  await sendMessage(chatId, `<b>Активных заказов: ${orders.length}</b>`, {
+    reply_markup: staffKeyboard(staff),
+  });
+  const staffMap = await staffNameMap(orders.map((o) => o.confirmedById).filter(Boolean) as string[]);
+  for (const o of orders) {
+    const guest = await firstGuestName(o.sessionId);
     await sendMessage(
       chatId,
-      `<b>${esc(staff.name)}</b>\nРоль: ${staff.role}\nСмена: ${staff.onShift ? 'на смене' : 'выкл'}`,
+      orderCard(o, o.session.table.label, guest, staffMap),
+      { reply_markup: orderInlineKeyboard(o.id, o.status) },
     );
-    return;
   }
-  if (text.startsWith('/')) {
-    await sendMessage(chatId, 'Команды: /shift_on /shift_off /me');
-  }
+}
+
+async function showStats(chatId: number, staff: Staff) {
+  const since = startOfToday();
+  const [acceptedByMe, readyByMe, rejectedByMe, totalToday] = await Promise.all([
+    prisma.order.count({ where: { confirmedById: staff.id, status: 'ACCEPTED', confirmedAt: { gte: since } } }),
+    prisma.order.count({ where: { confirmedById: staff.id, status: 'READY', confirmedAt: { gte: since } } }),
+    prisma.order.count({ where: { confirmedById: staff.id, status: 'REJECTED', confirmedAt: { gte: since } } }),
+    prisma.order.aggregate({
+      where: { confirmedById: staff.id, status: { in: ['ACCEPTED', 'READY'] }, confirmedAt: { gte: since } },
+      _sum: { total: true },
+    }),
+  ]);
+  const sum = totalToday._sum.total?.toString() ?? '0';
+  const lines = [
+    `<b>📊 Сегодняшняя смена</b>`,
+    '',
+    `Принято: <b>${acceptedByMe + readyByMe}</b>`,
+    `↳ Готовых: <b>${readyByMe}</b>`,
+    `Отклонено: <b>${rejectedByMe}</b>`,
+    `Сумма принятых: <b>${sum} ₽</b>`,
+  ];
+  await sendMessage(chatId, lines.join('\n'), { reply_markup: staffKeyboard(staff) });
 }
 
 /* ============================ CALLBACK QUERY ============================ */
@@ -151,7 +263,7 @@ async function handleMessage(m: TgMessage) {
 async function handleCallback(cb: TgCallback) {
   const tgUserId = cb.from.id;
   const data = cb.data ?? '';
-  const match = data.match(/^order:([^:]+):(accept|reject)$/);
+  const match = data.match(/^order:([^:]+):(accept|reject|ready)$/);
   if (!match) {
     await answerCallbackQuery(cb.id, 'Неизвестное действие');
     return;
@@ -172,20 +284,32 @@ async function handleCallback(cb: TgCallback) {
     await answerCallbackQuery(cb.id, 'Заказ не найден');
     return;
   }
-  if (order.status !== 'PENDING') {
-    await answerCallbackQuery(cb.id, `Уже ${order.status === 'ACCEPTED' ? 'принят' : 'обработан'}`);
+
+  // Валидация перехода статусов.
+  const ok =
+    (action === 'accept' && order.status === 'PENDING') ||
+    (action === 'reject' && order.status === 'PENDING') ||
+    (action === 'ready'  && order.status === 'ACCEPTED');
+  if (!ok) {
+    await answerCallbackQuery(cb.id, `Уже ${humanStatus(order.status)}`);
     return;
   }
 
-  const newStatus = action === 'accept' ? 'ACCEPTED' : 'REJECTED';
-  await prisma.order.update({
+  const newStatus =
+    action === 'accept' ? 'ACCEPTED' :
+    action === 'reject' ? 'REJECTED' :
+                          'READY';
+
+  const updated = await prisma.order.update({
     where: { id: orderId },
     data: {
       status: newStatus,
       confirmedAt: new Date(),
-      confirmedById: staff.id,
+      confirmedById: action === 'ready' ? order.confirmedById ?? staff.id : staff.id,
     },
+    include: { items: true, session: { include: { table: true } } },
   });
+
   await prisma.auditLog.create({
     data: {
       type: `order.${action}`,
@@ -194,19 +318,72 @@ async function handleCallback(cb: TgCallback) {
     },
   });
 
-  await answerCallbackQuery(cb.id, newStatus === 'ACCEPTED' ? '✓ Принят' : '✗ Отклонён');
+  await answerCallbackQuery(cb.id,
+    newStatus === 'ACCEPTED' ? '✓ Принят' :
+    newStatus === 'READY'    ? '🍹 Готов' :
+                               '✗ Отклонён');
 
-  // Обновляем сообщение в чате того, кто нажал — без кнопок, с пометкой статуса.
   if (cb.message) {
-    const mark = newStatus === 'ACCEPTED'
-      ? `\n\n<b>✓ Принят — ${esc(staff.name)}</b>`
-      : `\n\n<b>✗ Отклонён — ${esc(staff.name)}</b>`;
-    const baseText = (cb.message.text ?? '') + mark;
+    const guest = await firstGuestName(updated.sessionId);
+    const staffMap = await staffNameMap(updated.confirmedById ? [updated.confirmedById] : []);
     try {
-      await editMessageText(cb.message.chat.id, cb.message.message_id, baseText);
+      await editMessageText(
+        cb.message.chat.id,
+        cb.message.message_id,
+        orderCard(updated, updated.session.table.label, guest, staffMap),
+        { reply_markup: orderInlineKeyboard(updated.id, updated.status) },
+      );
     } catch (e) {
       console.warn('editMessageText failed', e);
     }
   }
 }
 
+/* ============================== УТИЛИТЫ ============================== */
+
+async function firstGuestName(sessionId: string): Promise<string> {
+  const g = await prisma.guest.findFirst({
+    where: { sessionId },
+    orderBy: { createdAt: 'asc' },
+  });
+  return g?.name ?? 'Гость';
+}
+
+async function staffNameMap(ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const list = await prisma.staff.findMany({
+    where: { id: { in: Array.from(new Set(ids)) } },
+    select: { id: true, name: true },
+  });
+  return new Map(list.map((s) => [s.id, s.name]));
+}
+
+function startOfToday(): Date {
+  const tz = process.env.TZ || 'Europe/Moscow';
+  const now = new Date();
+  // Грубая локализация — достаточно для статистики смены.
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(now);
+  return new Date(`${parts}T00:00:00`);
+}
+
+function fmtDateTime(d: Date): string {
+  const tz = process.env.TZ || 'Europe/Moscow';
+  try {
+    return new Intl.DateTimeFormat('ru-RU', {
+      timeZone: tz, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    }).format(d);
+  } catch {
+    return d.toISOString().slice(0, 16).replace('T', ' ');
+  }
+}
+
+function humanStatus(s: string): string {
+  switch (s) {
+    case 'ACCEPTED': return 'принят';
+    case 'READY':    return 'готов';
+    case 'REJECTED': return 'отклонён';
+    default:         return s.toLowerCase();
+  }
+}

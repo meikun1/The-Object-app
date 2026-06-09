@@ -23,10 +23,21 @@ async function call<T = unknown>(method: string, body: unknown): Promise<T> {
 
 export type InlineKeyboard = { text: string; callback_data: string }[][];
 
+export type ReplyKeyboard = {
+  keyboard: { text: string }[][];
+  resize_keyboard?: boolean;
+  is_persistent?: boolean;
+};
+
+type Markup =
+  | { inline_keyboard: InlineKeyboard }
+  | ReplyKeyboard
+  | { remove_keyboard: true };
+
 export function sendMessage(
   chatId: number | string,
   text: string,
-  opts?: { reply_markup?: { inline_keyboard: InlineKeyboard } },
+  opts?: { reply_markup?: Markup },
 ) {
   return call<{ message_id: number }>('sendMessage', {
     chat_id: chatId,
@@ -58,6 +69,10 @@ export function answerCallbackQuery(callbackQueryId: string, text?: string) {
     callback_query_id: callbackQueryId,
     ...(text ? { text } : {}),
   });
+}
+
+export function setMyCommands(commands: { command: string; description: string }[]) {
+  return call('setMyCommands', { commands });
 }
 
 export function setWebhook(url: string, secret?: string) {

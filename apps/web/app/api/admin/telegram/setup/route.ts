@@ -1,8 +1,10 @@
-// Настройка webhook Telegram. POST включает webhook на текущий домен,
-// GET возвращает текущий статус (что показывает Telegram про наш bot).
+// Настройка webhook Telegram + список команд для меню бота.
+// POST включает webhook + регистрирует /-команды.
+// GET возвращает текущий статус webhook.
 // Защита — заголовок x-admin-token.
 import { NextResponse } from 'next/server';
-import { deleteWebhook, getWebhookInfo, setWebhook } from '@/lib/telegram';
+import { deleteWebhook, getWebhookInfo, setMyCommands, setWebhook } from '@/lib/telegram';
+import { COMMANDS } from '@/lib/bot-ui';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,6 +38,8 @@ export async function POST(req: Request) {
     const url = `${publicBase(req)}/api/telegram/webhook`;
     const secret = process.env.TELEGRAM_WEBHOOK_SECRET || undefined;
     await setWebhook(url, secret);
+    // Регистрируем команды — Telegram покажет их в меню «/».
+    try { await setMyCommands(COMMANDS); } catch (e) { console.warn('setMyCommands', e); }
     return NextResponse.json({ ok: true, url });
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });

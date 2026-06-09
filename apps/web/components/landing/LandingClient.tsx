@@ -40,7 +40,7 @@ export default function LandingClient() {
       cleanups.push(() => burger.removeEventListener('click', onBurger), ...onLinks);
     }
 
-    /* --- reveal-анимации --- */
+    /* --- reveal-анимации с fail-safe --- */
     const reveals = Array.from(document.querySelectorAll<HTMLElement>('.landing [data-reveal]'));
     if ('IntersectionObserver' in window && !reduce) {
       const io = new IntersectionObserver((entries) => {
@@ -49,9 +49,15 @@ export default function LandingClient() {
           e.target.classList.add('in');
           io.unobserve(e.target);
         });
-      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+      }, { threshold: 0.05, rootMargin: '0px 0px -4% 0px' });
       reveals.forEach((el) => io.observe(el));
       cleanups.push(() => io.disconnect());
+      // Fail-safe: если по любой причине observer не доехал — через 1.5 с
+      // принудительно показываем всё. Лучше без анимации, чем пустые секции.
+      const failsafe = window.setTimeout(() => {
+        reveals.forEach((el) => el.classList.add('in'));
+      }, 1500);
+      cleanups.push(() => window.clearTimeout(failsafe));
     } else {
       reveals.forEach((el) => el.classList.add('in'));
     }
